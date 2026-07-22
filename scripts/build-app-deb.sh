@@ -22,4 +22,11 @@ chmod 0440 "$stage_dir/etc/sudoers.d/cartheon-installer"
 
 output_dir="$project_dir/config/packages.chroot"
 install -d "$output_dir"
-dpkg-deb --root-owner-group --build "$stage_dir" "$output_dir/cartheon-shell_0.1.0_all.deb"
+package_version=$(sed -n 's/^Version: //p' "$stage_dir/DEBIAN/control")
+if [ -z "$package_version" ]; then
+    echo "The Cartheon package control file has no Version field." >&2
+    exit 1
+fi
+rm -f "$output_dir"/cartheon-shell_*_all.deb
+dpkg-deb --root-owner-group --build \
+    "$stage_dir" "$output_dir/cartheon-shell_${package_version}_all.deb"

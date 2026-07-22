@@ -5,6 +5,12 @@ in ISO 8601 format.
 
 ## Unreleased
 
+### 2026-07-22T18:38:08+02:00
+
+- Bumped the Cartheon shell package to `0.1.1` and made its build filename
+  derive from the control metadata, ensuring changed packages upgrade during
+  incremental live-image builds.
+
 ### 2026-07-22T18:34:53+02:00
 
 - Initialized the pre-created `player` account with Debian Live's standard
