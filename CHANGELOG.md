@@ -5,6 +5,12 @@ in ISO 8601 format.
 
 ## Unreleased
 
+### 2026-07-22T20:24:35+02:00
+
+- Added the Python Cairo/GTK bridge required by the animated cartridge logo,
+  allowing the Cartheon appliance window to finish constructing at login;
+  declared GTK 4's GDK version explicitly and bumped the shell to `0.1.4`.
+
 ### 2026-07-22T19:56:41+02:00
 
 - Fixed ownership of the pre-created `player` home so graphical session files
