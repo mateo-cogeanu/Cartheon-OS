@@ -5,6 +5,11 @@ in ISO 8601 format.
 
 ## Unreleased
 
+### 2026-07-22T18:05:13+02:00
+
+- Registered the `7.1.4-cartheon` custom kernel as live-build's sole Linux
+  flavour so its kernel and initramfs are exported into the ISO boot directory.
+
 ### 2026-07-22T17:48:51+02:00
 
 - Preseeded acceptance of the Intel IPW2100/IPW2200 firmware license so broad
