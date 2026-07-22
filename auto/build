@@ -1,4 +1,4 @@
 #!/bin/sh
 set -eu
 
-exec ./scripts/build-iso.sh
+exec lb build noauto "$@"

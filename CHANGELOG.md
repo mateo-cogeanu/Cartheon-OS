@@ -5,6 +5,11 @@ in ISO 8601 format.
 
 ## Unreleased
 
+### 2026-07-22T17:42:29+02:00
+
+- Fixed the live-build `auto/build` entry point to use its non-recursive
+  `noauto` handoff instead of repeatedly restarting the Cartheon ISO wrapper.
+
 ### 2026-07-22T17:40:30+02:00
 
 - Disabled every DWARF choice before selecting `DEBUG_INFO_NONE`, verified
