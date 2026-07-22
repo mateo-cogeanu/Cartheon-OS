@@ -10,18 +10,24 @@ fi
 # PAM permits LightDM's configured passwordless autologin.
 usermod --password '8Ab05sVQ4LLps' player
 
+# live-config may create the account before this package while leaving its home
+# owned by root. LightDM needs the home to create X authority/session files.
+chown player:player /home/player
+
 for group in audio video input render plugdev; do
     if getent group "$group" >/dev/null; then
         usermod --append --groups "$group" player
     fi
 done
 
-install -d -o player -g player /home/player/.local/share/cartheon
+install -d -o player -g player \
+    /home/player/.local \
+    /home/player/.local/share \
+    /home/player/.local/share/cartheon
 
-# Cartheon is an appliance session, so start X directly instead of depending
-# on a greeter's autologin behavior. LightDM stays installed for compatibility
-# with Calamares and can still be enabled manually for diagnostics.
-systemctl disable lightdm.service >/dev/null 2>&1 || true
-systemctl enable cartheon-session.service >/dev/null 2>&1 || true
+# Let LightDM own Xorg, VT permissions, and the unprivileged player session.
+systemctl disable cartheon-session.service >/dev/null 2>&1 || true
+rm -f /etc/systemd/system/graphical.target.wants/cartheon-session.service
+systemctl enable lightdm.service >/dev/null 2>&1 || true
 
 #DEBHELPER#

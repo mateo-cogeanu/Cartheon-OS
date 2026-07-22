@@ -5,6 +5,12 @@ in ISO 8601 format.
 
 ## Unreleased
 
+### 2026-07-22T19:56:41+02:00
+
+- Fixed ownership of the pre-created `player` home so graphical session files
+  can be created, and restored LightDM as the VT/Xorg owner with an explicit
+  Cartheon autologin session; bumped the shell package to `0.1.3`.
+
 ### 2026-07-22T19:05:52+02:00
 
 - Replaced LightDM-dependent autologin with a dedicated VT1 systemd appliance
