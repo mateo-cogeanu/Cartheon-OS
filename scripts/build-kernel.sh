@@ -103,6 +103,9 @@ scripts/config --module SATA_AHCI
 scripts/config --module BLK_DEV_NVME
 scripts/config --disable RUST
 scripts/config --disable DEBUG_INFO
+scripts/config --disable DEBUG_INFO_DWARF_TOOLCHAIN_DEFAULT
+scripts/config --disable DEBUG_INFO_DWARF4
+scripts/config --disable DEBUG_INFO_DWARF5
 scripts/config --enable DEBUG_INFO_NONE
 scripts/config --disable DEBUG_INFO_BTF
 scripts/config --set-str SYSTEM_TRUSTED_KEYS ""

@@ -5,6 +5,11 @@ in ISO 8601 format.
 
 ## Unreleased
 
+### 2026-07-22T17:40:30+02:00
+
+- Disabled every DWARF choice before selecting `DEBUG_INFO_NONE`, verified
+  against Linux 7.1.4 Kconfig so the no-debug release setting persists.
+
 ### 2026-07-22T17:37:52+02:00
 
 - Explicitly selected Kernel 7's `DEBUG_INFO_NONE` Kconfig choice so release
