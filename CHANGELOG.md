@@ -5,6 +5,11 @@ in ISO 8601 format.
 
 ## Unreleased
 
+### 2026-07-22T17:46:24+02:00
+
+- Updated the Cartheon application package dependency from obsolete
+  `policykit-1` to Debian 13's `polkitd`, matching the live-image package list.
+
 ### 2026-07-22T17:42:29+02:00
 
 - Fixed the live-build `auto/build` entry point to use its non-recursive
