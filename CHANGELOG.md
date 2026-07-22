@@ -5,6 +5,20 @@ in ISO 8601 format.
 
 ## Unreleased
 
+### 2026-07-22T16:40:35+02:00
+
+- Expanded the live image with broad AMD, Intel, and NVIDIA GPU firmware and
+  open-source graphics support.
+- Added AMD and Intel CPU microcode, current Debian backports firmware, and
+  common Wi-Fi, Ethernet, audio DSP, Bluetooth, storage, and controller support.
+- Added explicit 64-bit and 32-bit Mesa, OpenGL, and Vulkan drivers so Wine
+  games can use GPU acceleration on both architectures.
+- Expanded the custom Kernel 7 configuration for newer Intel Xe graphics,
+  CPU power management, IOMMU, USB4, audio, Bluetooth, cameras, and virtual GPUs.
+- Regenerated every installed kernel initramfs after firmware installation.
+- Replaced the obsolete `policykit-1` package name with Debian 13's `polkitd`
+  package so the live image dependency set resolves on Trixie.
+
 ### 2026-07-22T16:35:11+02:00
 
 - Created the initial Cartheon OS x86_64 prototype.

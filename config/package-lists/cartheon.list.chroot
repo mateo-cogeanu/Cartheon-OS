@@ -18,29 +18,81 @@ gir1.2-gtk-4.0
 python3-gi
 udisks2
 exfatprogs
-policykit-1
+polkitd
 sudo
 util-linux
 x11-xserver-utils
 
-# Graphics, Vulkan, audio, controllers, and useful firmware
+# CPU firmware and platform power management
+amd64-microcode
+intel-microcode
+thermald
+
+# Open graphics stack for AMD, Intel, and NVIDIA (Nouveau/NVK)
 libgl1-mesa-dri
 mesa-vulkan-drivers
+mesa-va-drivers
+mesa-vdpau-drivers
+intel-media-va-driver
+libvulkan1
 vulkan-tools
+vainfo
+vdpauinfo
 gamemode
+
+# Broad GPU, platform, networking, and audio firmware
+firmware-linux
+firmware-linux-nonfree
+firmware-misc-nonfree
+firmware-amd-graphics
+firmware-intel-graphics
+firmware-nvidia-graphics
+firmware-intel-misc
+firmware-intel-sound
+firmware-sof-signed
+firmware-cirrus
+firmware-atheros
+firmware-brcm80211
+firmware-iwlwifi
+firmware-ipw2x00
+firmware-libertas
+firmware-mediatek
+firmware-realtek
+firmware-ti-connectivity
+firmware-bnx2
+firmware-bnx2x
+firmware-cavium
+firmware-myricom
+firmware-netronome
+firmware-netxen
+firmware-qlogic
+atmel-firmware
+bluez-firmware
+firmware-zd1211
+
+# Audio, Bluetooth, controllers, cameras, and removable hardware
 pipewire
 pipewire-audio
 wireplumber
+libspa-0.2-bluetooth
 alsa-utils
 bluez
-firmware-amd-graphics
-firmware-iwlwifi
-firmware-realtek
+joystick
+steam-devices
+usb-modeswitch
 
 # Networking is useful for Wine prerequisites and game launchers
 network-manager
+modemmanager
 wpasupplicant
 ca-certificates
+
+# Storage controllers and filesystems used by modern gaming PCs
+nvme-cli
+mdadm
+lvm2
+cryptsetup-initramfs
+smartmontools
 
 # Graphical live installer for BIOS and UEFI systems
 calamares

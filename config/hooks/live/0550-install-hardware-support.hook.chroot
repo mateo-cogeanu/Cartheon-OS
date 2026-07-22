@@ -1,0 +1,37 @@
+#!/bin/sh
+set -eu
+
+# Wine games still need the i386 OpenGL/Vulkan userspace stack on Debian 13.
+dpkg --add-architecture i386
+apt-get update
+DEBIAN_FRONTEND=noninteractive apt-get install -y --install-recommends \
+    libgl1-mesa-dri:amd64 \
+    libgl1-mesa-dri:i386 \
+    libvulkan1:amd64 \
+    libvulkan1:i386 \
+    mesa-vulkan-drivers:amd64 \
+    mesa-vulkan-drivers:i386
+
+# Pull the newest officially backported firmware for recent 2025/2026 hardware.
+DEBIAN_FRONTEND=noninteractive apt-get install -y --install-recommends \
+    --target-release trixie-backports \
+    firmware-amd-graphics \
+    firmware-atheros \
+    firmware-bnx2 \
+    firmware-bnx2x \
+    firmware-brcm80211 \
+    firmware-cavium \
+    firmware-cirrus \
+    firmware-intel-graphics \
+    firmware-intel-misc \
+    firmware-intel-sound \
+    firmware-iwlwifi \
+    firmware-linux \
+    firmware-linux-nonfree \
+    firmware-mediatek \
+    firmware-misc-nonfree \
+    firmware-nvidia-graphics \
+    firmware-realtek
+
+# Firmware packages may be installed after the custom kernel package.
+update-initramfs -u -k all

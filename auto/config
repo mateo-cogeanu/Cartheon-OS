@@ -6,6 +6,7 @@ lb config noauto \
     --distribution trixie \
     --architecture amd64 \
     --archive-areas "main contrib non-free non-free-firmware" \
+    --backports true \
     --binary-image iso-hybrid \
     --bootloaders "grub-efi,syslinux" \
     --debian-installer none \

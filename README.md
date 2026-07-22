@@ -16,8 +16,9 @@ LightDM, and the Calamares graphical installer.
 - Debian 13 live/install image
 - pinned Linux 7.1.4 source, compiled into a Debian kernel package
 - WineHQ stable, with a build-time check requiring Wine 11 or newer
-- Debian DXVK 2.6, Vulkan/Mesa, GameMode, PipeWire, controller input, and common
-  AMD/Intel/Wi-Fi firmware
+- Debian DXVK 2.6, 64/32-bit Vulkan and Mesa, GameMode, PipeWire, and controller input
+- broad AMD, Intel, and NVIDIA open-driver firmware, CPU microcode, networking,
+  storage, Bluetooth, camera, and audio firmware, upgraded from Debian backports
 - hybrid BIOS/UEFI ISO and Calamares graphical installer
 - fullscreen GTK 4 appliance shell with no desktop, taskbar, or file manager
 
@@ -120,8 +121,9 @@ project signing key, signed kernel/modules, and a shim enrollment process.
 Wine 11 substantially broadens Windows compatibility, but no Linux/Wine system
 can promise every Windows game. Kernel anti-cheat, DRM, Microsoft Store/UWP,
 special hardware drivers, launchers, and individual game bugs can still prevent
-a title from running. NVIDIA's proprietary driver is also not bundled in this
-prototype. The honest project goal is **broad native and Wine compatibility with
+a title from running. NVIDIA's proprietary driver is not bundled because its DKMS
+module may lag behind Kernel 7; Nouveau/NVK and NVIDIA firmware provide the safe
+live-image fallback. The honest project goal is **broad native and Wine compatibility with
 per-cartridge settings**, followed by a tested compatibility catalog.
 
 ## Repository map
