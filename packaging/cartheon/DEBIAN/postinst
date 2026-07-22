@@ -18,4 +18,10 @@ done
 
 install -d -o player -g player /home/player/.local/share/cartheon
 
+# Cartheon is an appliance session, so start X directly instead of depending
+# on a greeter's autologin behavior. LightDM stays installed for compatibility
+# with Calamares and can still be enabled manually for diagnostics.
+systemctl disable lightdm.service >/dev/null 2>&1 || true
+systemctl enable cartheon-session.service >/dev/null 2>&1 || true
+
 #DEBHELPER#

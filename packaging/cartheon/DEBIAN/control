@@ -1,10 +1,10 @@
 Package: cartheon-shell
-Version: 0.1.1
+Version: 0.1.2
 Section: games
 Priority: optional
 Architecture: all
 Maintainer: Cartheon OS Project <maintainers@invalid.example>
-Depends: python3 (>= 3.11), python3-gi, gir1.2-gtk-4.0, lightdm, openbox, polkitd, sudo, udisks2, util-linux, x11-xserver-utils
+Depends: python3 (>= 3.11), python3-gi, gir1.2-gtk-4.0, lightdm, openbox, polkitd, sudo, udisks2, util-linux, x11-xserver-utils, xinit
 Description: cartridge shell and game launcher for Cartheon OS
  The fullscreen appliance interface, cartridge manifest parser, exFAT detector,
  and native/Wine process launcher used by Cartheon OS.

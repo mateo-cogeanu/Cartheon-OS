@@ -5,6 +5,12 @@ in ISO 8601 format.
 
 ## Unreleased
 
+### 2026-07-22T19:05:52+02:00
+
+- Replaced LightDM-dependent autologin with a dedicated VT1 systemd appliance
+  service that starts the Cartheon X session directly as `player` and restarts
+  it on failure; bumped the shell package to `0.1.2`.
+
 ### 2026-07-22T18:40:06+02:00
 
 - Fixed `auto/clean` to preserve the caller's requested live-build cleanup
