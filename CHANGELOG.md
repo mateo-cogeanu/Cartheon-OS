@@ -5,6 +5,11 @@ in ISO 8601 format.
 
 ## Unreleased
 
+### 2026-07-22T17:37:52+02:00
+
+- Explicitly selected Kernel 7's `DEBUG_INFO_NONE` Kconfig choice so release
+  builds no longer create multi-gigabyte debug-symbol packages.
+
 ### 2026-07-22T16:55:57+02:00
 
 - Added the missing `libdw-dev` Kernel 7 packaging dependency to the Debian
