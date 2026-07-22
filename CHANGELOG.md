@@ -5,6 +5,11 @@ in ISO 8601 format.
 
 ## Unreleased
 
+### 2026-07-22T16:55:57+02:00
+
+- Added the missing `libdw-dev` Kernel 7 packaging dependency to the Debian
+  builder bootstrap after validating the build on a clean x86_64 machine.
+
 ### 2026-07-22T16:48:02+02:00
 
 - Removed the GitHub Actions workflow so pushes and pull requests no longer
