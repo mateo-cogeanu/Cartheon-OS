@@ -5,6 +5,11 @@ in ISO 8601 format.
 
 ## Unreleased
 
+### 2026-07-22T16:48:02+02:00
+
+- Removed the GitHub Actions workflow so pushes and pull requests no longer
+  start automated repository jobs.
+
 ### 2026-07-22T16:40:35+02:00
 
 - Expanded the live image with broad AMD, Intel, and NVIDIA GPU firmware and
