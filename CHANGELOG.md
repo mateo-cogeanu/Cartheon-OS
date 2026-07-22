@@ -5,6 +5,12 @@ in ISO 8601 format.
 
 ## Unreleased
 
+### 2026-07-22T18:12:36+02:00
+
+- Made the hardware-support hook create the custom kernel's initial initramfs
+  when package installation precedes `initramfs-tools`, ensuring live-build can
+  export a complete boot pair into the ISO.
+
 ### 2026-07-22T18:05:13+02:00
 
 - Registered the `7.1.4-cartheon` custom kernel as live-build's sole Linux

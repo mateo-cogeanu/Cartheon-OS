@@ -33,5 +33,15 @@ DEBIAN_FRONTEND=noninteractive apt-get install -y --install-recommends \
     firmware-nvidia-graphics \
     firmware-realtek
 
-# Firmware packages may be installed after the custom kernel package.
-update-initramfs -u -k all
+# Firmware packages may be installed after the custom kernel package. The
+# kernel package can also be unpacked before initramfs-tools is available, so
+# create its first image explicitly instead of relying on update mode alone.
+for modules_dir in /lib/modules/*-cartheon; do
+    [ -d "$modules_dir" ] || continue
+    kernel_release=${modules_dir##*/}
+    if [ -e "/boot/initrd.img-$kernel_release" ]; then
+        update-initramfs -u -k "$kernel_release"
+    else
+        update-initramfs -c -k "$kernel_release"
+    fi
+done
