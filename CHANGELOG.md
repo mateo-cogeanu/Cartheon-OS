@@ -5,6 +5,11 @@ in ISO 8601 format.
 
 ## Unreleased
 
+### 2026-07-22T18:40:06+02:00
+
+- Fixed `auto/clean` to preserve the caller's requested live-build cleanup
+  scope instead of converting every cleanup into a full purge.
+
 ### 2026-07-22T18:38:08+02:00
 
 - Bumped the Cartheon shell package to `0.1.1` and made its build filename
