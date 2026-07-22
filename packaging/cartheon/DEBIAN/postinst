@@ -5,6 +5,11 @@ if ! getent passwd player >/dev/null; then
     useradd --create-home --uid 1000 --shell /bin/bash --comment "Cartheon Player" player
 fi
 
+# live-config skips user setup when the account already exists. Give the
+# pre-created appliance account Debian Live's standard "live" password hash so
+# PAM permits LightDM's configured passwordless autologin.
+usermod --password '8Ab05sVQ4LLps' player
+
 for group in audio video input render plugdev; do
     if getent group "$group" >/dev/null; then
         usermod --append --groups "$group" player

@@ -5,6 +5,11 @@ in ISO 8601 format.
 
 ## Unreleased
 
+### 2026-07-22T18:34:53+02:00
+
+- Initialized the pre-created `player` account with Debian Live's standard
+  credential state so PAM permits LightDM autologin into the Cartheon session.
+
 ### 2026-07-22T18:12:36+02:00
 
 - Made the hardware-support hook create the custom kernel's initial initramfs
