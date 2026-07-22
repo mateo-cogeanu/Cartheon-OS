@@ -5,6 +5,11 @@ in ISO 8601 format.
 
 ## Unreleased
 
+### 2026-07-22T17:48:51+02:00
+
+- Preseeded acceptance of the Intel IPW2100/IPW2200 firmware license so broad
+  legacy Wi-Fi support installs during noninteractive live-image builds.
+
 ### 2026-07-22T17:46:24+02:00
 
 - Updated the Cartheon application package dependency from obsolete
