@@ -1,0 +1,9 @@
+PRETTY_NAME="Cartheon OS 0.1"
+NAME="Cartheon OS"
+VERSION_ID="0.1"
+VERSION="0.1 (Prototype)"
+VERSION_CODENAME=trixie
+ID=cartheon
+ID_LIKE=debian
+HOME_URL="https://example.invalid/cartheon"
+SUPPORT_URL="https://example.invalid/cartheon/issues"

@@ -1,0 +1,3 @@
+#!/bin/sh
+export PYTHONPATH=/usr/lib/cartheon
+exec /usr/bin/python3 -m cartheon.main "$@"

@@ -1,0 +1,7 @@
+[Desktop Entry]
+Name=Cartheon OS
+Comment=Cartheon cartridge console
+Exec=/usr/bin/cartheon-session
+TryExec=/usr/bin/cartheon-session
+Type=Application
+DesktopNames=Cartheon

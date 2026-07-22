@@ -1,0 +1,14 @@
+#!/bin/sh
+set -eu
+
+kernel_package=$(dpkg-query -W -f='${Package}\n' 2>/dev/null | sed -n '/^linux-image-[0-9].*-cartheon$/p' | head -n 1)
+if [ -z "$kernel_package" ]; then
+    echo "The Cartheon Kernel 7 package was not installed into the live image." >&2
+    exit 1
+fi
+kernel_release=${kernel_package#linux-image-}
+kernel_major=${kernel_release%%.*}
+if [ "$kernel_major" -lt 7 ]; then
+    echo "Cartheon OS requires Kernel 7 or newer; found $kernel_package." >&2
+    exit 1
+fi

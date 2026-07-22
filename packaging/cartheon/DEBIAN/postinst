@@ -1,0 +1,16 @@
+#!/bin/sh
+set -e
+
+if ! getent passwd player >/dev/null; then
+    useradd --create-home --uid 1000 --shell /bin/bash --comment "Cartheon Player" player
+fi
+
+for group in audio video input render plugdev; do
+    if getent group "$group" >/dev/null; then
+        usermod --append --groups "$group" player
+    fi
+done
+
+install -d -o player -g player /home/player/.local/share/cartheon
+
+#DEBHELPER#

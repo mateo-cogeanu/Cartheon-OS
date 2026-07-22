@@ -1,0 +1,53 @@
+# Core live system and the Cartheon shell's dependencies. The shell package
+# itself is installed automatically from config/packages.chroot.
+live-boot
+live-config
+live-config-systemd
+systemd-sysv
+initramfs-tools
+locales
+
+# Minimal X11 appliance session
+xserver-xorg-core
+xserver-xorg-input-all
+xserver-xorg-video-all
+lightdm
+openbox
+libgtk-4-1
+gir1.2-gtk-4.0
+python3-gi
+udisks2
+exfatprogs
+policykit-1
+sudo
+util-linux
+x11-xserver-utils
+
+# Graphics, Vulkan, audio, controllers, and useful firmware
+libgl1-mesa-dri
+mesa-vulkan-drivers
+vulkan-tools
+gamemode
+pipewire
+pipewire-audio
+wireplumber
+alsa-utils
+bluez
+firmware-amd-graphics
+firmware-iwlwifi
+firmware-realtek
+
+# Networking is useful for Wine prerequisites and game launchers
+network-manager
+wpasupplicant
+ca-certificates
+
+# Graphical live installer for BIOS and UEFI systems
+calamares
+calamares-settings-debian
+grub-pc-bin
+grub-efi-amd64-bin
+efibootmgr
+parted
+btrfs-progs
+dosfstools

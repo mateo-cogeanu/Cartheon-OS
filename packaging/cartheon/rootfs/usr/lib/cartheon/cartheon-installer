@@ -1,0 +1,8 @@
+#!/bin/sh
+set -eu
+
+if [ ! -d /run/live/medium ] && [ ! -d /lib/live/mount/medium ]; then
+    echo "The installer is only available from the live image." >&2
+    exit 1
+fi
+exec /usr/bin/calamares

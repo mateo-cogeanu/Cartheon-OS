@@ -1,0 +1,6 @@
+#!/bin/sh
+xset s off
+xset -dpms
+xsetroot -solid '#070912'
+openbox --config-file /etc/cartheon/openbox.xml &
+exec /usr/bin/cartheon-shell
