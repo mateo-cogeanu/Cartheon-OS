@@ -169,7 +169,6 @@ class NetworkWindow(Gtk.ApplicationWindow):
         content.append(password_label)
         self.password = Gtk.PasswordEntry()
         self.password.set_show_peek_icon(True)
-        self.password.set_placeholder_text("Leave empty for an open network")
         self.password.connect("activate", self._connect_clicked)
         content.append(self.password)
 

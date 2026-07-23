@@ -5,6 +5,14 @@ in ISO 8601 format.
 
 ## Unreleased
 
+### 2026-07-23T12:28:51+02:00
+
+- Fixed the live Wi-Fi assistant crash caused by calling the unsupported
+  `set_placeholder_text()` method on GTK 4's `PasswordEntry`, which left only
+  Openbox's black background and mouse pointer visible.
+- Added a regression check for the incompatible GTK call and bumped the shell
+  package to `0.1.8`.
+
 ### 2026-07-23T11:58:09+02:00
 
 - Prevented unsupported X11 screen-saver or DPMS operations from terminating
