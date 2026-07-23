@@ -27,20 +27,20 @@ label {
   text-shadow: 2px 2px #000000;
 }
 .screen-title {
-  font-size: 42px;
+  font-size: 64px;
   font-weight: 400;
 }
 .game-title {
-  font-size: 34px;
+  font-size: 54px;
   font-weight: 400;
 }
 .message {
   color: #bac1d9;
-  font-size: 18px;
+  font-size: 30px;
 }
 .detail {
   color: #8792b8;
-  font-size: 14px;
+  font-size: 23px;
 }
 .error {
   color: #ff668c;
@@ -63,7 +63,7 @@ button {
   border-radius: 4px;
   background: #24b85a;
   color: #06130b;
-  font-size: 25px;
+  font-size: 40px;
   font-weight: 400;
   box-shadow: 0 8px #116b34;
 }
@@ -81,7 +81,7 @@ button {
 }
 .settings-title {
   color: #d7dcff;
-  font-size: 34px;
+  font-size: 54px;
   font-weight: 400;
 }
 .settings-button {
@@ -91,7 +91,7 @@ button {
   border-radius: 0;
   background: #151d36;
   color: #e9ebff;
-  font-size: 18px;
+  font-size: 30px;
   font-weight: 400;
   box-shadow: 4px 4px #050711;
 }
@@ -104,7 +104,7 @@ button {
 .network-button {
   min-width: 530px;
   min-height: 40px;
-  font-size: 16px;
+  font-size: 27px;
 }
 .connected-button {
   border-color: #51dc7e;
@@ -127,7 +127,7 @@ entry {
   color: #ffffff;
   caret-color: #8e9cff;
   font-family: "ProggyTinyTT", "Terminus", monospace;
-  font-size: 18px;
+  font-size: 30px;
   box-shadow: 4px 4px #02030a;
 }
 entry:focus {

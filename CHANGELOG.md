@@ -5,6 +5,14 @@ in ISO 8601 format.
 
 ## Unreleased
 
+### 2026-07-23T16:32:55+02:00
+
+- Increased every ProggyTiny typography tier by roughly two-thirds after
+  physical 2560×1440 inspection, preserving the crisp pixel grid while making
+  home, loading, menu, network, status, and hint text readable from couch
+  distance.
+- Bumped the shell package to `0.2.10`.
+
 ### 2026-07-23T16:30:29+02:00
 
 - Fixed the shell and settings being stranded as a 1280×720 window in the
