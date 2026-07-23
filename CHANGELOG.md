@@ -5,6 +5,20 @@ in ISO 8601 format.
 
 ## Unreleased
 
+### 2026-07-23T14:52:41+02:00
+
+- Extended the 8-bit visual language across every Cartheon shell screen with
+  the Terminus pixel typeface, square block controls, stepped shadows, and
+  instant page transitions.
+- Replaced the Wi-Fi toggle with a keyboard-navigable network menu supporting
+  power, rescanning, password entry, connection switching, and disconnect.
+- Replaced the Bluetooth toggle with a nearby-device menu supporting power,
+  scanning, pairing/trusting/connecting new devices, and disconnecting active
+  devices.
+- Hid the mouse pointer everywhere in the Cartheon shell while leaving game
+  windows unaffected; added wireless parsing/action tests and bumped the shell
+  package to `0.2.1`.
+
 ### 2026-07-23T13:59:42+02:00
 
 - Replaced immediate cartridge launch with an 8-bit cover screen that discovers

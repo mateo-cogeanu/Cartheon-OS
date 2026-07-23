@@ -9,6 +9,7 @@ NETWORK_SETUP = (
     / "packaging/cartheon/rootfs/usr/lib/cartheon/cartheon-network-setup"
 )
 MAIN_MODULE = PROJECT_ROOT / "src/cartheon/main.py"
+UI_MODULE = PROJECT_ROOT / "src/cartheon/ui.py"
 OPENBOX_CONFIG = (
     PROJECT_ROOT / "packaging/cartheon/rootfs/etc/cartheon/openbox.xml"
 )
@@ -31,6 +32,17 @@ class LiveAssetTests(unittest.TestCase):
         shortcut = next(binding for binding in bindings if binding.get("key") == "C-A-Escape")
         command = shortcut.find(".//openbox:command", namespace)
         self.assertEqual(command.text, "/usr/bin/cartheon-menu")
+
+    def test_cartheon_shell_never_shows_a_mouse_cursor(self) -> None:
+        source = UI_MODULE.read_text()
+        self.assertIn('set_cursor_from_name("none")', source)
+        self.assertNotIn('set_cursor_from_name("default")', source)
+
+    def test_wireless_radios_open_device_menus(self) -> None:
+        source = UI_MODULE.read_text()
+        self.assertIn('"WI-FI SETTINGS  >"', source)
+        self.assertIn('"BLUETOOTH SETTINGS  >"', source)
+        self.assertIn('"wifi_password"', source)
 
 
 if __name__ == "__main__":

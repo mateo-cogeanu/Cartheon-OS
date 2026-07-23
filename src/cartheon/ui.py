@@ -1,4 +1,4 @@
-"""Pixel-styled GTK 4 shell for Cartheon OS."""
+"""Pixel-styled, keyboard-first GTK 4 shell for Cartheon OS."""
 
 from __future__ import annotations
 
@@ -13,14 +13,18 @@ gi.require_version("Gdk", "4.0")
 gi.require_version("Gtk", "4.0")
 from gi.repository import Gdk, GLib, Gtk  # noqa: E402
 
-from .system_controls import SystemStatus
+from .system_controls import BluetoothDevice, SystemStatus, WifiNetwork
 
 
 CSS = b"""
 window {
   background: #070912;
   color: #f5f7ff;
-  font-family: monospace;
+  font-family: "Terminus", "DejaVu Sans Mono", monospace;
+  font-weight: 700;
+}
+label {
+  text-shadow: 2px 2px #000000;
 }
 .screen-title {
   font-size: 42px;
@@ -35,7 +39,7 @@ window {
   font-size: 18px;
 }
 .detail {
-  color: #717b9e;
+  color: #8792b8;
   font-size: 14px;
 }
 .error {
@@ -44,48 +48,67 @@ window {
 .cover-frame {
   background: #11172b;
   border: 6px solid #35406d;
-  border-radius: 16px;
+  border-radius: 4px;
   padding: 6px;
+  box-shadow: 8px 8px #02030a;
+}
+button {
+  outline: none;
+  transition: none;
 }
 .play-button {
   min-width: 250px;
   min-height: 58px;
   border: 4px solid #baffc9;
-  border-radius: 12px;
+  border-radius: 4px;
   background: #24b85a;
   color: #06130b;
   font-size: 25px;
   font-weight: 900;
-  box-shadow: 0 7px #116b34;
+  box-shadow: 0 8px #116b34;
 }
-.play-button:hover, .play-button:focus {
+.play-button:focus {
   background: #59e681;
   border-color: #ffffff;
+  box-shadow: 0 8px #ffffff;
 }
 .settings-panel {
   background: #0e1427;
   border: 6px solid #8e9cff;
-  border-radius: 10px;
-  padding: 24px;
+  border-radius: 0;
+  padding: 22px;
+  box-shadow: 10px 10px #02030a;
 }
 .settings-title {
-  color: #cbd1ff;
-  font-size: 36px;
+  color: #d7dcff;
+  font-size: 34px;
   font-weight: 900;
 }
 .settings-button {
-  min-width: 560px;
-  min-height: 46px;
+  min-width: 570px;
+  min-height: 44px;
   border: 3px solid #35406d;
-  border-radius: 6px;
+  border-radius: 0;
   background: #151d36;
   color: #e9ebff;
-  font-size: 19px;
+  font-size: 18px;
   font-weight: 800;
+  box-shadow: 4px 4px #050711;
 }
-.settings-button:hover, .settings-button:focus {
+.settings-button:focus {
   background: #313d70;
-  border-color: #f4f5ff;
+  border-color: #ffffff;
+  color: #ffffff;
+  box-shadow: 4px 4px #8e9cff;
+}
+.network-button {
+  min-width: 530px;
+  min-height: 40px;
+  font-size: 16px;
+}
+.connected-button {
+  border-color: #51dc7e;
+  color: #9affbb;
 }
 .danger-button {
   border-color: #9c3650;
@@ -95,7 +118,31 @@ window {
   border-color: #8f7f35;
   color: #fff0a6;
 }
+entry {
+  min-width: 530px;
+  min-height: 42px;
+  border: 3px solid #35406d;
+  border-radius: 0;
+  background: #080c18;
+  color: #ffffff;
+  caret-color: #8e9cff;
+  font-family: "Terminus", "DejaVu Sans Mono", monospace;
+  font-size: 18px;
+  box-shadow: 4px 4px #02030a;
+}
+entry:focus {
+  border-color: #ffffff;
+}
+scrollbar slider {
+  min-width: 12px;
+  min-height: 20px;
+  border-radius: 0;
+  background: #8e9cff;
+}
 """
+
+
+SettingsPayload = object | None
 
 
 class PixelRings(Gtk.DrawingArea):
@@ -158,11 +205,17 @@ class ShellWindow(Gtk.ApplicationWindow):
         self.connect("close-request", lambda *_args: True)
 
         self._play: Callable[[], None] = lambda: None
-        self._settings_action: Callable[[str], None] = lambda _action: None
+        self._settings_action: Callable[[str, SettingsPayload], None] = (
+            lambda _action, _payload=None: None
+        )
         self._base_page = "waiting"
         self._settings_in_game = False
         self._has_cartridge = False
         self._game_running = False
+        self._wifi_networks: list[WifiNetwork] = []
+        self._bluetooth_devices: list[BluetoothDevice] = []
+        self._pending_wifi: WifiNetwork | None = None
+        self._menu_focusables: dict[str, list[Gtk.Widget]] = {}
 
         provider = Gtk.CssProvider()
         provider.load_from_data(CSS)
@@ -171,23 +224,26 @@ class ShellWindow(Gtk.ApplicationWindow):
         )
 
         self.pages = Gtk.Stack()
-        self.pages.set_transition_type(Gtk.StackTransitionType.CROSSFADE)
-        self.pages.set_transition_duration(140)
+        self.pages.set_transition_type(Gtk.StackTransitionType.NONE)
         self.set_child(self.pages)
 
         self._build_waiting_page()
         self._build_cartridge_page()
         self._build_status_page()
         self._build_settings_page()
+        self._build_wifi_page()
+        self._build_wifi_password_page()
+        self._build_bluetooth_page()
 
         keys = Gtk.EventControllerKey()
         keys.connect("key-pressed", self._key_pressed)
         self.add_controller(keys)
+        self.set_cursor_from_name("none")
 
     def set_callbacks(
         self,
         play: Callable[[], None],
-        settings_action: Callable[[str], None],
+        settings_action: Callable[[str, SettingsPayload], None],
     ) -> None:
         self._play = play
         self._settings_action = settings_action
@@ -197,8 +253,8 @@ class ShellWindow(Gtk.ApplicationWindow):
         page = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=spacing)
         page.set_halign(Gtk.Align.CENTER)
         page.set_valign(Gtk.Align.CENTER)
-        page.set_margin_top(28)
-        page.set_margin_bottom(28)
+        page.set_margin_top(24)
+        page.set_margin_bottom(24)
         page.set_margin_start(28)
         page.set_margin_end(28)
         return page
@@ -248,7 +304,7 @@ class ShellWindow(Gtk.ApplicationWindow):
         self.cartridge_title.set_justify(Gtk.Justification.CENTER)
         page.append(self.cartridge_title)
 
-        self.play_button = Gtk.Button(label="\u25b6  PLAY")
+        self.play_button = Gtk.Button(label=">  PLAY")
         self.play_button.add_css_class("play-button")
         self.play_button.set_halign(Gtk.Align.CENTER)
         self.play_button.connect("clicked", lambda _button: self._play())
@@ -280,55 +336,184 @@ class ShellWindow(Gtk.ApplicationWindow):
         page.append(self.status_detail)
         self.pages.add_named(page, "status")
 
-    def _settings_button(
-        self, label: str, action: str, extra_class: str | None = None
+    def _panel(self, title_text: str) -> tuple[Gtk.Box, Gtk.Box]:
+        outer = self._centered_page()
+        panel = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=9)
+        panel.add_css_class("settings-panel")
+        outer.append(panel)
+        title = Gtk.Label(label=title_text)
+        title.add_css_class("settings-title")
+        panel.append(title)
+        return outer, panel
+
+    def _menu_button(
+        self,
+        buttons: list[Gtk.Widget],
+        label: str,
+        action: str | None = None,
+        payload: SettingsPayload = None,
+        extra_class: str | None = None,
     ) -> Gtk.Button:
         button = Gtk.Button(label=label)
         button.add_css_class("settings-button")
         if extra_class:
             button.add_css_class(extra_class)
-        button.connect("clicked", lambda _button: self._settings_action(action))
-        self.settings_buttons.append(button)
+        if action is not None:
+            button.connect(
+                "clicked",
+                lambda _button, selected_action=action, selected_payload=payload: (
+                    self._settings_action(selected_action, selected_payload)
+                ),
+            )
+        buttons.append(button)
         return button
 
+    @staticmethod
+    def _status_label() -> Gtk.Label:
+        label = Gtk.Label(label="")
+        label.add_css_class("detail")
+        label.set_wrap(True)
+        label.set_justify(Gtk.Justification.CENTER)
+        return label
+
+    @staticmethod
+    def _hint() -> Gtk.Label:
+        hint = Gtk.Label(label="[ UP / DOWN ] SELECT    [ ENTER ] CHOOSE    [ ESC ] BACK")
+        hint.add_css_class("detail")
+        return hint
+
     def _build_settings_page(self) -> None:
-        outer = self._centered_page()
-        panel = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
-        panel.add_css_class("settings-panel")
-        outer.append(panel)
-
-        title = Gtk.Label(label="SETTINGS")
-        title.add_css_class("settings-title")
-        panel.append(title)
-
-        self.settings_buttons: list[Gtk.Button] = []
-        self.volume_button = self._settings_button("VOLUME: --  [ \u2190 / \u2192 ]", "volume_up")
+        outer, panel = self._panel("SETTINGS")
+        buttons: list[Gtk.Widget] = []
+        self.volume_button = self._menu_button(
+            buttons, "VOLUME: --  [ LEFT / RIGHT ]", "volume_up"
+        )
         panel.append(self.volume_button)
-        self.mute_button = self._settings_button("MUTE: --", "mute")
+        self.mute_button = self._menu_button(buttons, "MUTE: --", "mute")
         panel.append(self.mute_button)
-        self.bluetooth_button = self._settings_button("BLUETOOTH: --", "bluetooth")
-        panel.append(self.bluetooth_button)
-        self.wifi_button = self._settings_button("WI-FI: --", "wifi")
+        self.wifi_button = self._menu_button(buttons, "WI-FI SETTINGS  >", "wifi_open")
         panel.append(self.wifi_button)
-        self.quit_button = self._settings_button(
-            "QUIT CURRENT GAME", "quit_game", "danger-button"
+        self.bluetooth_button = self._menu_button(
+            buttons, "BLUETOOTH SETTINGS  >", "bluetooth_open"
+        )
+        panel.append(self.bluetooth_button)
+        self.quit_button = self._menu_button(
+            buttons, "QUIT CURRENT GAME", "quit_game", extra_class="danger-button"
         )
         panel.append(self.quit_button)
-        self.eject_button = self._settings_button(
-            "SAFELY EJECT CARTRIDGE", "eject", "eject-button"
+        self.eject_button = self._menu_button(
+            buttons,
+            "SAFELY EJECT CARTRIDGE",
+            "eject",
+            extra_class="eject-button",
         )
         panel.append(self.eject_button)
-        panel.append(self._settings_button("BACK", "back"))
-
-        self.settings_status = Gtk.Label(label="")
-        self.settings_status.add_css_class("detail")
-        self.settings_status.set_wrap(True)
-        self.settings_status.set_justify(Gtk.Justification.CENTER)
+        panel.append(self._menu_button(buttons, "<  BACK", "back"))
+        self.settings_status = self._status_label()
         panel.append(self.settings_status)
-        hint = Gtk.Label(label="[ \u2191 / \u2193 ] SELECT    [ ENTER ] CHOOSE    [ ESC ] BACK")
-        hint.add_css_class("detail")
-        panel.append(hint)
+        panel.append(self._hint())
+        self._menu_focusables["settings"] = buttons
         self.pages.add_named(outer, "settings")
+
+    def _build_wifi_page(self) -> None:
+        outer, panel = self._panel("WI-FI")
+        fixed_buttons: list[Gtk.Widget] = []
+        self.wifi_toggle_button = self._menu_button(
+            fixed_buttons, "WI-FI POWER: --", "wifi_toggle"
+        )
+        panel.append(self.wifi_toggle_button)
+        panel.append(
+            self._menu_button(fixed_buttons, "SCAN FOR NETWORKS", "wifi_refresh")
+        )
+        self.wifi_list = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=7)
+        scroll = Gtk.ScrolledWindow()
+        scroll.set_min_content_height(245)
+        scroll.set_max_content_height(245)
+        scroll.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
+        scroll.set_child(self.wifi_list)
+        panel.append(scroll)
+        self.wifi_back_button = self._menu_button(
+            fixed_buttons, "<  SETTINGS", "submenu_back"
+        )
+        panel.append(self.wifi_back_button)
+        self.wifi_status = self._status_label()
+        panel.append(self.wifi_status)
+        panel.append(self._hint())
+        self._wifi_fixed_buttons = fixed_buttons
+        self._menu_focusables["wifi"] = fixed_buttons
+        self.pages.add_named(outer, "wifi")
+
+    def _build_wifi_password_page(self) -> None:
+        outer, panel = self._panel("WI-FI PASSWORD")
+        self.wifi_password_network = Gtk.Label(label="")
+        self.wifi_password_network.add_css_class("message")
+        panel.append(self.wifi_password_network)
+        instruction = Gtk.Label(label="TYPE THE PASSWORD, OR LEAVE EMPTY FOR A SAVED NETWORK")
+        instruction.add_css_class("detail")
+        instruction.set_wrap(True)
+        panel.append(instruction)
+        self.wifi_password = Gtk.PasswordEntry()
+        self.wifi_password.set_show_peek_icon(False)
+        self.wifi_password.connect("activate", lambda _entry: self._submit_wifi_password())
+        panel.append(self.wifi_password)
+        buttons: list[Gtk.Widget] = [self.wifi_password]
+        connect = self._menu_button(buttons, "CONNECT", None)
+        connect.connect("clicked", lambda _button: self._submit_wifi_password())
+        panel.append(connect)
+        back = self._menu_button(buttons, "<  NETWORKS", None)
+        back.connect("clicked", lambda _button: self._show_menu_page("wifi"))
+        panel.append(back)
+        panel.append(self._hint())
+        self._menu_focusables["wifi_password"] = buttons
+        self.pages.add_named(outer, "wifi_password")
+
+    def _build_bluetooth_page(self) -> None:
+        outer, panel = self._panel("BLUETOOTH")
+        fixed_buttons: list[Gtk.Widget] = []
+        self.bluetooth_toggle_button = self._menu_button(
+            fixed_buttons, "BLUETOOTH POWER: --", "bluetooth_toggle"
+        )
+        panel.append(self.bluetooth_toggle_button)
+        panel.append(
+            self._menu_button(fixed_buttons, "SCAN FOR DEVICES", "bluetooth_refresh")
+        )
+        self.bluetooth_list = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=7)
+        scroll = Gtk.ScrolledWindow()
+        scroll.set_min_content_height(245)
+        scroll.set_max_content_height(245)
+        scroll.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
+        scroll.set_child(self.bluetooth_list)
+        panel.append(scroll)
+        self.bluetooth_back_button = self._menu_button(
+            fixed_buttons, "<  SETTINGS", "submenu_back"
+        )
+        panel.append(self.bluetooth_back_button)
+        self.bluetooth_status = self._status_label()
+        panel.append(self.bluetooth_status)
+        panel.append(self._hint())
+        self._bluetooth_fixed_buttons = fixed_buttons
+        self._menu_focusables["bluetooth"] = fixed_buttons
+        self.pages.add_named(outer, "bluetooth")
+
+    @staticmethod
+    def _clear_box(box: Gtk.Box) -> None:
+        while child := box.get_first_child():
+            box.remove(child)
+
+    def _show_menu_page(self, page: str) -> None:
+        self.pages.set_visible_child_name(page)
+        self.set_cursor_from_name("none")
+        self.present()
+        focusables = self._visible_focusables(page)
+        if focusables:
+            focusables[0].grab_focus()
+
+    def _visible_focusables(self, page: str) -> list[Gtk.Widget]:
+        return [
+            widget
+            for widget in self._menu_focusables.get(page, [])
+            if widget.get_visible() and widget.get_sensitive()
+        ]
 
     def _key_pressed(
         self,
@@ -337,53 +522,54 @@ class ShellWindow(Gtk.ApplicationWindow):
         _keycode: int,
         state: Gdk.ModifierType,
     ) -> bool:
-        page = self.pages.get_visible_child_name()
+        del state
+        page = self.pages.get_visible_child_name() or ""
         if keyval == Gdk.KEY_Escape:
             if page == "settings":
-                self._settings_action("back")
+                self._settings_action("back", None)
+            elif page in {"wifi", "bluetooth"}:
+                self._show_menu_page("settings")
+            elif page == "wifi_password":
+                self._show_menu_page("wifi")
             else:
-                self._settings_action("open")
+                self._settings_action("open", None)
             return True
-        if page != "settings":
+        if page == "cartridge" and keyval in (Gdk.KEY_Return, Gdk.KEY_KP_Enter):
+            self._play()
+            return True
+        focusables = self._visible_focusables(page)
+        if not focusables:
             return False
         if keyval in (Gdk.KEY_Up, Gdk.KEY_Down):
-            visible = [
-                button
-                for button in self.settings_buttons
-                if button.get_visible() and button.get_sensitive()
-            ]
-            if not visible:
-                return True
             focus = self.get_focus()
             try:
-                index = visible.index(focus)
+                index = focusables.index(focus)
             except ValueError:
                 index = 0
             else:
                 index += -1 if keyval == Gdk.KEY_Up else 1
-            visible[index % len(visible)].grab_focus()
+            focusables[index % len(focusables)].grab_focus()
             return True
-        if self.get_focus() is self.volume_button:
+        if page == "settings" and self.get_focus() is self.volume_button:
             if keyval == Gdk.KEY_Left:
-                self._settings_action("volume_down")
+                self._settings_action("volume_down", None)
                 return True
             if keyval == Gdk.KEY_Right:
-                self._settings_action("volume_up")
+                self._settings_action("volume_up", None)
                 return True
-        del state
         return False
 
     def _show_base(self, name: str) -> None:
         self._base_page = name
         self.pages.set_visible_child_name(name)
+        self.set_cursor_from_name("none")
         self.present()
 
     def show_waiting(self, detail: str = "") -> None:
         self._has_cartridge = False
         self._game_running = False
         self.waiting_rings.set_active(bool(detail))
-        self.waiting_detail.set_label(detail)
-        self.set_cursor_from_name("none")
+        self.waiting_detail.set_label(detail.upper())
         self._show_base("waiting")
 
     def show_cartridge(self, game_title: str, cover: Path | None) -> None:
@@ -403,7 +589,6 @@ class ShellWindow(Gtk.ApplicationWindow):
         if not loaded:
             self.cover_picture.set_paintable(None)
             self.cover_stack.set_visible_child_name("placeholder")
-        self.set_cursor_from_name("default")
         self._show_base("cartridge")
         self.play_button.grab_focus()
 
@@ -413,7 +598,7 @@ class ShellWindow(Gtk.ApplicationWindow):
         self.status_title.set_label(game_title.upper())
         self.status_message.set_label("CARTRIDGE STARTING")
         self.status_message.remove_css_class("error")
-        self.status_detail.set_label("Preparing your game...")
+        self.status_detail.set_label("PREPARING YOUR GAME...")
         self._show_base("status")
 
     def show_loading(self, game_title: str) -> None:
@@ -422,7 +607,7 @@ class ShellWindow(Gtk.ApplicationWindow):
         self.status_title.set_label(game_title.upper())
         self.status_message.set_label("LOADING...")
         self.status_message.remove_css_class("error")
-        self.status_detail.set_label("The first Wine launch can take a little longer")
+        self.status_detail.set_label("THE FIRST WINE LAUNCH CAN TAKE A LITTLE LONGER")
         self._show_base("status")
 
     def hide_for_game(self) -> None:
@@ -433,9 +618,9 @@ class ShellWindow(Gtk.ApplicationWindow):
         self._game_running = False
         self.status_rings.set_active(False)
         self.status_title.set_label("CARTRIDGE COULD NOT START")
-        self.status_message.set_label(error)
+        self.status_message.set_label(error.upper())
         self.status_message.add_css_class("error")
-        self.status_detail.set_label("Correct the cartridge, then remove and reinsert it")
+        self.status_detail.set_label("CORRECT THE CARTRIDGE, THEN REMOVE AND REINSERT IT")
         self._show_base("status")
 
     def show_settings(
@@ -448,18 +633,11 @@ class ShellWindow(Gtk.ApplicationWindow):
         self._has_cartridge = has_cartridge
         self.quit_button.set_visible(in_game)
         self.eject_button.set_visible(has_cartridge and not in_game)
-        self.settings_status.set_label("Reading system settings...")
+        self.settings_status.set_label("READING SYSTEM SETTINGS...")
         self.settings_status.remove_css_class("error")
-        self.pages.set_visible_child_name("settings")
-        self.set_cursor_from_name("default")
-        self.present()
         if status is not None:
             self.update_settings(status)
-        next(
-            button
-            for button in self.settings_buttons
-            if button.get_visible() and button.get_sensitive()
-        ).grab_focus()
+        self._show_menu_page("settings")
 
     @staticmethod
     def _switch_text(value: bool | None) -> str:
@@ -469,16 +647,173 @@ class ShellWindow(Gtk.ApplicationWindow):
 
     def update_settings(self, status: SystemStatus) -> None:
         volume = "--" if status.volume is None else f"{status.volume}%"
-        self.volume_button.set_label(f"VOLUME: {volume}  [ \u2190 / \u2192 ]")
+        self.volume_button.set_label(f"VOLUME: {volume}  [ LEFT / RIGHT ]")
         self.mute_button.set_label(f"MUTE: {self._switch_text(status.muted)}")
-        self.bluetooth_button.set_label(
-            f"BLUETOOTH: {self._switch_text(status.bluetooth)}"
+        if status.wifi:
+            wifi_detail = status.wifi_connection or "ON - NOT CONNECTED"
+        else:
+            wifi_detail = self._switch_text(status.wifi)
+        self.wifi_button.set_label(f"WI-FI: {wifi_detail.upper()}  >")
+        if status.bluetooth:
+            if status.bluetooth_connected:
+                bluetooth_detail = f"{len(status.bluetooth_connected)} CONNECTED"
+            else:
+                bluetooth_detail = "ON - NO DEVICES"
+        else:
+            bluetooth_detail = self._switch_text(status.bluetooth)
+        self.bluetooth_button.set_label(f"BLUETOOTH: {bluetooth_detail}  >")
+        self.wifi_toggle_button.set_label(
+            f"WI-FI POWER: {self._switch_text(status.wifi)}"
         )
-        self.wifi_button.set_label(f"WI-FI: {self._switch_text(status.wifi)}")
+        self.bluetooth_toggle_button.set_label(
+            f"BLUETOOTH POWER: {self._switch_text(status.bluetooth)}"
+        )
         self.settings_status.set_label("")
 
+    def show_wifi_loading(self, status: SystemStatus) -> None:
+        self.update_settings(status)
+        self._clear_box(self.wifi_list)
+        self.wifi_status.set_label(
+            "SCANNING FOR NETWORKS..." if status.wifi else "WI-FI IS OFF"
+        )
+        self.wifi_status.remove_css_class("error")
+        self._menu_focusables["wifi"] = list(self._wifi_fixed_buttons)
+        self._show_menu_page("wifi")
+
+    def show_wifi_menu(
+        self,
+        networks: list[WifiNetwork],
+        status: SystemStatus,
+        message: str = "",
+        error: bool = False,
+    ) -> None:
+        self._wifi_networks = networks
+        self.update_settings(status)
+        self._clear_box(self.wifi_list)
+        dynamic: list[Gtk.Widget] = []
+        for network in networks:
+            if network.connected:
+                marker = "[CONNECTED]"
+            elif network.secured:
+                marker = "[LOCKED]"
+            else:
+                marker = "[OPEN]"
+            label = f"{marker} {network.ssid}  {network.signal}%"
+            button = self._menu_button(
+                dynamic,
+                label,
+                extra_class="network-button",
+            )
+            if network.connected:
+                button.add_css_class("connected-button")
+            button.connect(
+                "clicked",
+                lambda _button, selected=network: self._select_wifi(selected),
+            )
+            self.wifi_list.append(button)
+        self._menu_focusables["wifi"] = (
+            self._wifi_fixed_buttons[:2] + dynamic + self._wifi_fixed_buttons[2:]
+        )
+        if message:
+            self.wifi_status.set_label(message.upper())
+        elif not status.wifi:
+            self.wifi_status.set_label("WI-FI IS OFF")
+        elif not networks:
+            self.wifi_status.set_label("NO NETWORKS FOUND")
+        else:
+            self.wifi_status.set_label("")
+        if error:
+            self.wifi_status.add_css_class("error")
+        else:
+            self.wifi_status.remove_css_class("error")
+        self._show_menu_page("wifi")
+
+    def _select_wifi(self, network: WifiNetwork) -> None:
+        if network.connected:
+            self._settings_action("wifi_disconnect", None)
+        elif network.secured:
+            self._pending_wifi = network
+            self.wifi_password_network.set_label(network.ssid.upper())
+            self.wifi_password.set_text("")
+            self._show_menu_page("wifi_password")
+            self.wifi_password.grab_focus()
+        else:
+            self._settings_action("wifi_connect", (network.ssid, ""))
+
+    def _submit_wifi_password(self) -> None:
+        if self._pending_wifi is None:
+            self._show_menu_page("wifi")
+            return
+        self._settings_action(
+            "wifi_connect",
+            (self._pending_wifi.ssid, self.wifi_password.get_text()),
+        )
+        self.wifi_password.set_text("")
+        self._show_menu_page("wifi")
+
+    def show_bluetooth_loading(self, status: SystemStatus) -> None:
+        self.update_settings(status)
+        self._clear_box(self.bluetooth_list)
+        self.bluetooth_status.set_label(
+            "SCANNING FOR DEVICES..." if status.bluetooth else "BLUETOOTH IS OFF"
+        )
+        self.bluetooth_status.remove_css_class("error")
+        self._menu_focusables["bluetooth"] = list(self._bluetooth_fixed_buttons)
+        self._show_menu_page("bluetooth")
+
+    def show_bluetooth_menu(
+        self,
+        devices: list[BluetoothDevice],
+        status: SystemStatus,
+        message: str = "",
+        error: bool = False,
+    ) -> None:
+        self._bluetooth_devices = devices
+        self.update_settings(status)
+        self._clear_box(self.bluetooth_list)
+        dynamic: list[Gtk.Widget] = []
+        for device in devices:
+            if device.connected:
+                marker = "[CONNECTED]"
+            elif device.paired:
+                marker = "[PAIRED]"
+            else:
+                marker = "[NEW]"
+            button = self._menu_button(
+                dynamic,
+                f"{marker} {device.name}",
+                extra_class="network-button",
+            )
+            if device.connected:
+                button.add_css_class("connected-button")
+            button.connect(
+                "clicked",
+                lambda _button, selected=device: self._settings_action(
+                    "bluetooth_device", selected
+                ),
+            )
+            self.bluetooth_list.append(button)
+        self._menu_focusables["bluetooth"] = (
+            self._bluetooth_fixed_buttons[:2]
+            + dynamic
+            + self._bluetooth_fixed_buttons[2:]
+        )
+        if message:
+            self.bluetooth_status.set_label(message.upper())
+        elif not status.bluetooth:
+            self.bluetooth_status.set_label("BLUETOOTH IS OFF")
+        elif not devices:
+            self.bluetooth_status.set_label("NO DEVICES FOUND")
+        else:
+            self.bluetooth_status.set_label("")
+        if error:
+            self.bluetooth_status.add_css_class("error")
+        else:
+            self.bluetooth_status.remove_css_class("error")
+        self._show_menu_page("bluetooth")
+
     def settings_message(self, message: str, error: bool = False) -> None:
-        self.settings_status.set_label(message)
+        self.settings_status.set_label(message.upper())
         if error:
             self.settings_status.add_css_class("error")
         else:
@@ -489,6 +824,7 @@ class ShellWindow(Gtk.ApplicationWindow):
             self.hide()
             return
         self.pages.set_visible_child_name(self._base_page)
+        self.set_cursor_from_name("none")
         self.present()
 
 

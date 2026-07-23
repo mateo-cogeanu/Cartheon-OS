@@ -77,8 +77,17 @@ you trust.
 - **Quit Current Game** returns to the cartridge cover.
 - **Safely Eject Cartridge** unmounts and powers down the drive before removal.
 
-The settings menu also controls mute, Bluetooth, and Wi-Fi. Controller navigation
-is planned but keyboard navigation is the current supported input.
+Every Cartheon shell screen uses the blocky Terminus pixel typeface and square,
+pixel-style controls. The pointer is hidden throughout the waiting, cartridge,
+loading, and settings screens; games receive their normal mouse pointer.
+
+Wi-Fi and Bluetooth open keyboard-navigable submenus instead of acting as simple
+switches. Wi-Fi can be enabled or disabled, rescanned, connected with a password,
+changed to another network, or disconnected. Bluetooth can be enabled or
+disabled, rescanned, paired/trusted/connected, or disconnected. Some legacy
+Bluetooth devices can still require a PIN or confirmation that BlueZ cannot
+complete noninteractively. Controller navigation is planned; keyboard navigation
+is the current supported input.
 
 ## Build the ISO
 

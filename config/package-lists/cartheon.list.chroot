@@ -16,6 +16,7 @@ openbox
 libgtk-4-1
 gir1.2-gtk-4.0
 python3-gi
+fonts-terminus
 udisks2
 exfatprogs
 polkitd

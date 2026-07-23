@@ -5,13 +5,23 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 import signal
+import subprocess
 import threading
 import time
 
 from .config import ConfigError, GameConfig, load_config
 from .devices import Cartridge, CartridgeMonitor, DeviceError, eject_device
 from .launcher import GameProcess, LaunchError, build_launch_spec
-from .system_controls import perform, read_status
+from .system_controls import (
+    BluetoothDevice,
+    change_bluetooth_device,
+    connect_wifi,
+    disconnect_wifi,
+    perform,
+    read_status,
+    scan_bluetooth_devices,
+    scan_wifi_networks,
+)
 
 
 class Controller:
@@ -180,18 +190,76 @@ class Controller:
         threading.Thread(target=refresh, name="settings-status", daemon=True).start()
         return True
 
-    def settings_action(self, action: str) -> None:
+    def settings_action(self, action: str, payload: object | None = None) -> None:
         if action == "open":
             self.open_settings()
             return
         if action == "back":
             self._ui(self.window.close_settings)
             return
+        if action == "submenu_back":
+            self.open_settings()
+            return
         if action == "quit_game":
             threading.Thread(target=self.quit_game, name="quit-game", daemon=True).start()
             return
         if action == "eject":
             threading.Thread(target=self._safe_eject, name="safe-eject", daemon=True).start()
+            return
+        if action in {"wifi_open", "wifi_refresh"}:
+            threading.Thread(
+                target=self._load_wifi_menu,
+                name="wifi-scan",
+                daemon=True,
+            ).start()
+            return
+        if action in {"bluetooth_open", "bluetooth_refresh"}:
+            threading.Thread(
+                target=self._load_bluetooth_menu,
+                name="bluetooth-scan",
+                daemon=True,
+            ).start()
+            return
+        if action == "wifi_connect":
+            if (
+                not isinstance(payload, tuple)
+                or len(payload) != 2
+                or not all(isinstance(value, str) for value in payload)
+            ):
+                self._ui(self.window.settings_message, "Invalid Wi-Fi selection", True)
+                return
+            threading.Thread(
+                target=self._change_wifi_connection,
+                args=(payload[0], payload[1]),
+                name="wifi-connect",
+                daemon=True,
+            ).start()
+            return
+        if action == "wifi_disconnect":
+            threading.Thread(
+                target=self._disconnect_wifi,
+                name="wifi-disconnect",
+                daemon=True,
+            ).start()
+            return
+        if action == "bluetooth_device":
+            if not isinstance(payload, BluetoothDevice):
+                self._ui(self.window.settings_message, "Invalid Bluetooth selection", True)
+                return
+            threading.Thread(
+                target=self._change_bluetooth_device,
+                args=(payload,),
+                name="bluetooth-device",
+                daemon=True,
+            ).start()
+            return
+        if action in {"wifi_toggle", "bluetooth_toggle"}:
+            threading.Thread(
+                target=self._toggle_radio,
+                args=(action,),
+                name=f"setting-{action}",
+                daemon=True,
+            ).start()
             return
 
         def change_setting() -> None:
@@ -209,6 +277,114 @@ class Controller:
             name=f"setting-{action}",
             daemon=True,
         ).start()
+
+    def _load_wifi_menu(self, message: str = "") -> None:
+        status = read_status()
+        self._ui(self.window.show_wifi_loading, status)
+        if not status.wifi:
+            self._ui(self.window.show_wifi_menu, [], status, message, False)
+            return
+        try:
+            networks = scan_wifi_networks()
+            status = read_status()
+        except (OSError, RuntimeError, subprocess.SubprocessError) as exc:
+            self._ui(
+                self.window.show_wifi_menu,
+                [],
+                read_status(),
+                str(exc),
+                True,
+            )
+            return
+        self._ui(self.window.show_wifi_menu, networks, status, message, False)
+
+    def _load_bluetooth_menu(self, message: str = "") -> None:
+        status = read_status()
+        self._ui(self.window.show_bluetooth_loading, status)
+        if not status.bluetooth:
+            self._ui(self.window.show_bluetooth_menu, [], status, message, False)
+            return
+        try:
+            devices = scan_bluetooth_devices()
+            status = read_status()
+        except (OSError, RuntimeError, subprocess.SubprocessError) as exc:
+            self._ui(
+                self.window.show_bluetooth_menu,
+                [],
+                read_status(),
+                str(exc),
+                True,
+            )
+            return
+        self._ui(self.window.show_bluetooth_menu, devices, status, message, False)
+
+    def _change_wifi_connection(self, ssid: str, password: str) -> None:
+        try:
+            message = connect_wifi(ssid, password)
+        except (OSError, RuntimeError, ValueError, subprocess.SubprocessError) as exc:
+            self._ui(
+                self.window.show_wifi_menu,
+                [],
+                read_status(),
+                str(exc),
+                True,
+            )
+            return
+        self._load_wifi_menu(message)
+
+    def _disconnect_wifi(self) -> None:
+        try:
+            message = disconnect_wifi()
+        except (OSError, RuntimeError, subprocess.SubprocessError) as exc:
+            self._ui(
+                self.window.show_wifi_menu,
+                [],
+                read_status(),
+                str(exc),
+                True,
+            )
+            return
+        self._load_wifi_menu(message)
+
+    def _change_bluetooth_device(self, device: BluetoothDevice) -> None:
+        try:
+            message = change_bluetooth_device(device)
+        except (OSError, RuntimeError, subprocess.SubprocessError) as exc:
+            self._ui(
+                self.window.show_bluetooth_menu,
+                [],
+                read_status(),
+                str(exc),
+                True,
+            )
+            return
+        self._load_bluetooth_menu(message)
+
+    def _toggle_radio(self, action: str) -> None:
+        try:
+            message = perform(action)
+        except (OSError, RuntimeError, ValueError, subprocess.SubprocessError) as exc:
+            if action == "wifi_toggle":
+                self._ui(
+                    self.window.show_wifi_menu,
+                    [],
+                    read_status(),
+                    str(exc),
+                    True,
+                )
+            else:
+                self._ui(
+                    self.window.show_bluetooth_menu,
+                    [],
+                    read_status(),
+                    str(exc),
+                    True,
+                )
+            return
+        if action == "wifi_toggle":
+            self._load_wifi_menu(message)
+        else:
+            self._load_bluetooth_menu(message)
 
     def _safe_eject(self) -> None:
         with self._lock:
