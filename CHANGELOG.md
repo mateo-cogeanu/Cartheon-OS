@@ -5,6 +5,14 @@ in ISO 8601 format.
 
 ## Unreleased
 
+### 2026-07-23T09:21:26+02:00
+
+- Added a graphical pre-install network assistant that detects an existing wired
+  connection or scans and connects to secured, open, and hidden Wi-Fi networks.
+- Blocked Calamares from starting until internet access is verified, preventing
+  package downloads from failing partway through setup; bumped the shell to
+  `0.1.5`.
+
 ### 2026-07-22T20:24:35+02:00
 
 - Added the Python Cairo/GTK bridge required by the animated cartridge logo,

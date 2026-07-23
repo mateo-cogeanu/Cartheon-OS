@@ -110,7 +110,9 @@ PYTHONPATH=src python3 -m cartheon.main --cartridge /path/to/test-cartridge
 
 Boot the ISO first in QEMU with UEFI and a virtual USB/exFAT disk, then test AMD,
 Intel, and NVIDIA hardware separately. Press **F10** or use the small installer
-button on the live image to open Calamares.
+button on the live image to begin setup. If no working wired connection is
+present, Cartheon scans for Wi-Fi (including a manually entered hidden network),
+prompts for its password, and verifies internet access before opening Calamares.
 
 The prototype kernel is not Secure Boot signed. Disable Secure Boot in the test
 machine's firmware before booting this ISO. A production image should add a

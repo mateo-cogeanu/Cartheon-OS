@@ -17,7 +17,8 @@ chmod 0755 \
     "$stage_dir/usr/bin/cartheon-shell" \
     "$stage_dir/usr/bin/cartheon-validate" \
     "$stage_dir/usr/bin/cartheon-session" \
-    "$stage_dir/usr/lib/cartheon/cartheon-installer"
+    "$stage_dir/usr/lib/cartheon/cartheon-installer" \
+    "$stage_dir/usr/lib/cartheon/cartheon-network-setup"
 chmod 0440 "$stage_dir/etc/sudoers.d/cartheon-installer"
 
 output_dir="$project_dir/config/packages.chroot"

@@ -5,4 +5,8 @@ if [ ! -d /run/live/medium ] && [ ! -d /lib/live/mount/medium ]; then
     echo "The installer is only available from the live image." >&2
     exit 1
 fi
+
+systemctl start NetworkManager.service
+/usr/lib/cartheon/cartheon-network-setup
+
 exec /usr/bin/calamares
