@@ -85,12 +85,17 @@ If a fullscreen game minimizes when the settings overlay takes focus, closing
 the overlay explicitly unminimizes, raises, and focuses the game's topmost
 window before returning control.
 
-Every Cartheon shell screen uses the blocky Terminus pixel typeface and square,
-pixel-style controls. The pointer is hidden throughout the waiting, cartridge,
-loading, and settings screens; games receive their normal mouse pointer. The
-cut-ring cartridge graphic keeps spinning while Cartheon waits, and pressing
-Play starts an original synthesized 8-bit cartridge jingle alongside the boot
-animation.
+Every Cartheon shell screen uses the grid-designed ProggyTiny pixel typeface and
+square, pixel-style controls. The pointer is hidden throughout the waiting,
+cartridge, loading, and settings screens; games receive their normal mouse
+pointer. The cut rings orbit a shaded pixel cartridge with a glowing label/core
+and connector pins while Cartheon waits. Pressing Play starts an original
+synthesized 8-bit cartridge jingle alongside the boot animation.
+
+Whenever Cartheon remaps itself after a game or settings overlay, it reasserts
+fullscreen immediately and again on GTK's next frame. A game cannot leave the
+shell stranded at its 1280×720 fallback size in the upper-left of a larger
+display.
 
 Wi-Fi and Bluetooth open keyboard-navigable submenus instead of acting as simple
 switches. Wi-Fi can be enabled or disabled, rescanned, connected with a password,

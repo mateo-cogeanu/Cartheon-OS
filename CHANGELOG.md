@@ -5,6 +5,20 @@ in ISO 8601 format.
 
 ## Unreleased
 
+### 2026-07-23T16:30:29+02:00
+
+- Fixed the shell and settings being stranded as a 1280×720 window in the
+  upper-left after a game: every shell/menu remap now reasserts fullscreen
+  immediately and on GTK's next frame.
+- Replaced the smoothed monospace presentation with Debian's genuine
+  grid-designed `ProggyTinyTT` pixel font throughout the home screen, loading
+  screens, controls, entries, and settings.
+- Replaced the ring center's simple striped rectangle with a shaded pixel
+  cartridge featuring stepped shoulders, a glowing cross-shaped core, and gold
+  connector pins.
+- Added fullscreen, font, icon, and package-dependency regression coverage and
+  bumped the shell package to `0.2.9`.
+
 ### 2026-07-23T16:09:38+02:00
 
 - Kept the BlueZ discovery client alive while reading device properties so RSSI

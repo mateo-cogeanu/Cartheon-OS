@@ -20,19 +20,19 @@ CSS = b"""
 window {
   background: #070912;
   color: #f5f7ff;
-  font-family: "Terminus", "DejaVu Sans Mono", monospace;
-  font-weight: 700;
+  font-family: "ProggyTinyTT", "Terminus", monospace;
+  font-weight: 400;
 }
 label {
   text-shadow: 2px 2px #000000;
 }
 .screen-title {
   font-size: 42px;
-  font-weight: 900;
+  font-weight: 400;
 }
 .game-title {
   font-size: 34px;
-  font-weight: 900;
+  font-weight: 400;
 }
 .message {
   color: #bac1d9;
@@ -64,7 +64,7 @@ button {
   background: #24b85a;
   color: #06130b;
   font-size: 25px;
-  font-weight: 900;
+  font-weight: 400;
   box-shadow: 0 8px #116b34;
 }
 .play-button:focus {
@@ -82,7 +82,7 @@ button {
 .settings-title {
   color: #d7dcff;
   font-size: 34px;
-  font-weight: 900;
+  font-weight: 400;
 }
 .settings-button {
   min-width: 570px;
@@ -92,7 +92,7 @@ button {
   background: #151d36;
   color: #e9ebff;
   font-size: 18px;
-  font-weight: 800;
+  font-weight: 400;
   box-shadow: 4px 4px #050711;
 }
 .settings-button:focus {
@@ -126,7 +126,7 @@ entry {
   background: #080c18;
   color: #ffffff;
   caret-color: #8e9cff;
-  font-family: "Terminus", "DejaVu Sans Mono", monospace;
+  font-family: "ProggyTinyTT", "Terminus", monospace;
   font-size: 18px;
   box-shadow: 4px 4px #02030a;
 }
@@ -187,13 +187,62 @@ class PixelRings(Gtk.DrawingArea):
                 context.rectangle(x - pixel / 2, y - pixel / 2, pixel, pixel)
             context.fill()
 
-        context.set_source_rgb(0.92, 0.94, 1.0)
-        unit = pixel * 2
-        context.rectangle(cx - unit * 1.5, cy - unit * 2, unit * 3, unit * 4)
+        # A shaded pixel cartridge sits at the orbit center. Its stepped
+        # shoulders, label/core, and connector pins stay aligned to the same
+        # integer pixel grid as the rings.
+        unit = pixel * 1.35
+
+        def cartridge_path(offset_x: float = 0, offset_y: float = 0) -> None:
+            points = (
+                (-3.5, -5.5),
+                (3.5, -5.5),
+                (3.5, -4.5),
+                (4.5, -4.5),
+                (4.5, 5.5),
+                (-4.5, 5.5),
+                (-4.5, -4.5),
+                (-3.5, -4.5),
+            )
+            context.move_to(
+                cx + (points[0][0] + offset_x) * unit,
+                cy + (points[0][1] + offset_y) * unit,
+            )
+            for x, y in points[1:]:
+                context.line_to(
+                    cx + (x + offset_x) * unit,
+                    cy + (y + offset_y) * unit,
+                )
+            context.close_path()
+
+        context.set_source_rgb(0.01, 0.02, 0.06)
+        cartridge_path(0.8, 0.8)
         context.fill()
-        context.set_source_rgb(0.10, 0.14, 0.28)
-        context.rectangle(cx - unit, cy - unit, unit * 2, pixel)
-        context.rectangle(cx - unit, cy, unit * 2, pixel)
+        context.set_source_rgb(0.16, 0.21, 0.43)
+        cartridge_path()
+        context.fill()
+
+        context.set_source_rgb(0.82, 0.85, 1.0)
+        context.rectangle(cx - 3.5 * unit, cy - 4.5 * unit, 7 * unit, 9 * unit)
+        context.fill()
+        context.set_source_rgb(0.08, 0.11, 0.25)
+        context.rectangle(cx - unit, cy - 4.5 * unit, 2 * unit, unit)
+        context.rectangle(cx - 2.5 * unit, cy - 2.5 * unit, 5 * unit, 4 * unit)
+        context.rectangle(cx - 3.5 * unit, cy + 2.4 * unit, 7 * unit, 0.8 * unit)
+        context.fill()
+
+        context.set_source_rgb(0.25, 0.82, 0.95)
+        context.rectangle(cx - 0.55 * unit, cy - 1.8 * unit, 1.1 * unit, 2.6 * unit)
+        context.rectangle(cx - 1.3 * unit, cy - 1.05 * unit, 2.6 * unit, 1.1 * unit)
+        context.fill()
+
+        context.set_source_rgb(1.0, 0.79, 0.29)
+        for pin in (-2.4, -0.8, 0.8, 2.4):
+            context.rectangle(
+                cx + (pin - 0.35) * unit,
+                cy + 3.25 * unit,
+                0.7 * unit,
+                1.25 * unit,
+            )
         context.fill()
 
 
@@ -505,6 +554,8 @@ class ShellWindow(Gtk.ApplicationWindow):
         self.pages.set_visible_child_name(page)
         self.set_cursor_from_name("none")
         self.present()
+        self.fullscreen()
+        GLib.idle_add(self.fullscreen)
         focusables = self._visible_focusables(page)
         if focusables:
             focusables[0].grab_focus()
@@ -565,6 +616,8 @@ class ShellWindow(Gtk.ApplicationWindow):
         self.pages.set_visible_child_name(name)
         self.set_cursor_from_name("none")
         self.present()
+        self.fullscreen()
+        GLib.idle_add(self.fullscreen)
 
     def show_waiting(self, detail: str = "") -> None:
         self._has_cartridge = False
@@ -828,6 +881,8 @@ class ShellWindow(Gtk.ApplicationWindow):
         self.pages.set_visible_child_name(self._base_page)
         self.set_cursor_from_name("none")
         self.present()
+        self.fullscreen()
+        GLib.idle_add(self.fullscreen)
 
 
 class CartheonApplication(Gtk.Application):

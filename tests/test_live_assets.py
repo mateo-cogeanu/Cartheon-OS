@@ -56,6 +56,23 @@ class LiveAssetTests(unittest.TestCase):
         self.assertIn('"BLUETOOTH SETTINGS  >"', source)
         self.assertIn('"wifi_password"', source)
 
+    def test_shell_reasserts_fullscreen_after_game_return(self) -> None:
+        source = UI_MODULE.read_text()
+        show_base = source.split("def _show_base", 1)[1].split(
+            "def show_waiting", 1
+        )[0]
+        close_settings = source.split("def close_settings", 1)[1].split(
+            "class CartheonApplication", 1
+        )[0]
+        self.assertIn("self.fullscreen()", show_base)
+        self.assertIn("GLib.idle_add(self.fullscreen)", show_base)
+        self.assertIn("self.fullscreen()", close_settings)
+
+    def test_shell_uses_true_pixel_font_and_cartridge_core(self) -> None:
+        source = UI_MODULE.read_text()
+        self.assertIn('"ProggyTinyTT"', source)
+        self.assertIn("for pin in (-2.4, -0.8, 0.8, 2.4)", source)
+
     def test_game_window_detector_is_a_runtime_dependency(self) -> None:
         control = PACKAGE_CONTROL.read_text()
         depends = next(
@@ -65,6 +82,7 @@ class LiveAssetTests(unittest.TestCase):
         )
         self.assertIn("x11-utils", depends)
         self.assertIn("wmctrl", depends)
+        self.assertIn("fonts-proggy", depends)
 
 
 if __name__ == "__main__":
