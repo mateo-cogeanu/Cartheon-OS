@@ -5,6 +5,14 @@ in ISO 8601 format.
 
 ## Unreleased
 
+### 2026-07-23T16:04:31+02:00
+
+- Fixed Bluetooth strength readings on BlueZ adapters that expose RSSI only in
+  the live discovery event stream: Cartheon now strips terminal color codes,
+  retains each device's latest scan RSSI, and uses it for display and sorting.
+- Added real BlueZ event-format regression coverage and bumped the shell package
+  to `0.2.7`.
+
 ### 2026-07-23T16:00:50+02:00
 
 - Made the pixel cut rings spin continuously on the empty-cartridge screen.

@@ -285,12 +285,25 @@ def _bluetooth_info(address: str) -> _BluetoothDetails:
     )
 
 
+def _scan_rssi(output: str) -> dict[str, int]:
+    clean = re.sub(r"\x1b\[[0-9;]*m", "", output)
+    readings: dict[str, int] = {}
+    pattern = re.compile(
+        r"Device\s+([0-9A-Fa-f:]{17})\s+RSSI:\s+"
+        r"(?:0x[0-9A-Fa-f]+\s+)?\((-?\d+)\)"
+    )
+    for match in pattern.finditer(clean):
+        readings[match.group(1).upper()] = int(match.group(2))
+    return readings
+
+
 def scan_bluetooth_devices() -> list[BluetoothDevice]:
     # The bounded scan updates BlueZ's device cache and exits automatically.
     try:
-        _run("bluetoothctl", "--timeout", "6", "scan", "on", timeout=10)
+        scan = _run("bluetoothctl", "--timeout", "6", "scan", "on", timeout=10)
     except subprocess.TimeoutExpired:
-        pass
+        scan = subprocess.CompletedProcess([], 124, "", "")
+    scan_readings = _scan_rssi(scan.stdout)
     result = _run("bluetoothctl", "devices", timeout=15)
     if result.returncode != 0:
         detail = result.stderr.strip() or result.stdout.strip()
@@ -309,7 +322,7 @@ def scan_bluetooth_devices() -> list[BluetoothDevice]:
                 connected=details.connected,
                 paired=details.paired,
                 trusted=details.trusted,
-                rssi=details.rssi,
+                rssi=scan_readings.get(parts[1].upper(), details.rssi),
             )
         )
     return sorted(

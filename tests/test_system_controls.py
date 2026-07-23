@@ -11,6 +11,7 @@ from cartheon.system_controls import (
     scan_bluetooth_devices,
     scan_wifi_networks,
     split_escaped_fields,
+    _scan_rssi,
 )
 
 
@@ -19,6 +20,20 @@ def result(stdout: str = "", stderr: str = "", returncode: int = 0):
 
 
 class SystemControlTests(unittest.TestCase):
+    def test_parses_colored_bluez_scan_rssi_events(self) -> None:
+        output = (
+            "[\u001b[0;93mCHG\u001b[0m] Device AA:BB:CC:DD:EE:01 "
+            "RSSI: 0xffffffc4 (-60)\n"
+            "[CHG] Device AA:BB:CC:DD:EE:02 RSSI: 0xffffffa2 (-94)\n"
+        )
+        self.assertEqual(
+            _scan_rssi(output),
+            {
+                "AA:BB:CC:DD:EE:01": -60,
+                "AA:BB:CC:DD:EE:02": -94,
+            },
+        )
+
     def test_split_nmcli_fields_retains_colons(self) -> None:
         self.assertEqual(
             split_escaped_fields(r"yes:Arcade\: Upstairs:82:WPA2"),
@@ -75,15 +90,18 @@ class SystemControlTests(unittest.TestCase):
     @patch("cartheon.system_controls._run")
     def test_bluetooth_scan_marks_paired_and_connected_devices(self, run) -> None:
         run.side_effect = [
-            result(),
+            result(
+                "[CHG] Device AA:BB:CC:DD:EE:01 RSSI: 0xffffffd8 (-40)\n"
+                "[CHG] Device AA:BB:CC:DD:EE:03 RSSI: 0xffffffb5 (-75)\n"
+            ),
             result(
                 "Device AA:BB:CC:DD:EE:01 Pixel Pad\n"
                 "Device AA:BB:CC:DD:EE:02 Headphones\n"
                 "Device AA:BB:CC:DD:EE:03 Arcade Stick\n"
             ),
-            result("Connected: no\nPaired: no\nTrusted: no\nRSSI: -42\n"),
+            result("Connected: no\nPaired: no\nTrusted: no\n"),
             result("Connected: yes\nPaired: yes\nTrusted: yes\nRSSI: -81\n"),
-            result("Connected: no\nPaired: yes\nTrusted: yes\nRSSI: -67\n"),
+            result("Connected: no\nPaired: yes\nTrusted: yes\n"),
         ]
         devices = scan_bluetooth_devices()
         self.assertEqual(devices[0].name, "Headphones")
