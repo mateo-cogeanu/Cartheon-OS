@@ -5,6 +5,19 @@ in ISO 8601 format.
 
 ## Unreleased
 
+### 2026-07-23T13:59:42+02:00
+
+- Replaced immediate cartridge launch with an 8-bit cover screen that discovers
+  `cover.*` artwork, shows the manifest title, and waits for the green Play
+  button or Enter key.
+- Reworked the shell with pixel-styled spinning cut rings and removed the
+  `CARTHEON OS` label from the empty-cartridge screen.
+- Added an Escape settings menu with keyboard navigation, volume, mute,
+  Bluetooth, Wi-Fi, safe cartridge ejection, and in-game Quit.
+- Added a global Ctrl+Alt+Escape Openbox shortcut that raises settings over a
+  game, plus cover, ejection, and shortcut regression tests; bumped the shell
+  package to `0.2.0`.
+
 ### 2026-07-23T13:39:23+02:00
 
 - Fixed the installed appliance's cartridge controller starting before its GTK

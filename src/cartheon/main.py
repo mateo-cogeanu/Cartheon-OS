@@ -4,12 +4,14 @@ from __future__ import annotations
 
 import argparse
 from pathlib import Path
+import signal
 import threading
 import time
 
 from .config import ConfigError, GameConfig, load_config
-from .devices import Cartridge, CartridgeMonitor
+from .devices import Cartridge, CartridgeMonitor, DeviceError, eject_device
 from .launcher import GameProcess, LaunchError, build_launch_spec
+from .system_controls import perform, read_status
 
 
 class Controller:
@@ -19,6 +21,8 @@ class Controller:
         self.monitor: CartridgeMonitor | None = None
         self.process: GameProcess | None = None
         self.active_device: str | None = None
+        self.active_cartridge: Cartridge | None = None
+        self.active_config: GameConfig | None = None
         self._generation = 0
         self._lock = threading.Lock()
 
@@ -56,13 +60,24 @@ class Controller:
             if self.active_device is not None:
                 return
             self.active_device = cartridge.device
+            self.active_cartridge = cartridge
             self._generation += 1
-            generation = self._generation
         try:
             config = load_config(cartridge.mountpoint)
         except (ConfigError, OSError) as exc:
             self._ui(self.window.show_error, str(exc))
             return
+        with self._lock:
+            self.active_config = config
+        self._ui(self.window.show_cartridge, config.title, config.cover)
+
+    def play(self) -> None:
+        with self._lock:
+            config = self.active_config
+            if config is None or self.process is not None:
+                return
+            self._generation += 1
+            generation = self._generation
         self._ui(self.window.show_booting, config.title)
         threading.Thread(
             target=self._launch_and_watch,
@@ -92,6 +107,9 @@ class Controller:
             return
         exit_code = process.poll()
         if exit_code is not None:
+            with self._lock:
+                if self.process is process:
+                    self.process = None
             self._ui(self.window.show_error, f"The game exited during startup (code {exit_code})")
             return
         self._ui(self.window.show_loading, config.title)
@@ -105,16 +123,13 @@ class Controller:
                     if self.process is process:
                         self.process = None
                 if exit_code == 0:
-                    self._ui(
-                        self.window.show_waiting,
-                        "Game closed — remove and reinsert the cartridge to play again",
-                    )
+                    self._show_cartridge()
                 else:
                     self._ui(self.window.show_error, f"The game exited with code {exit_code}")
                 return
             if not running_shown and time.monotonic() - loading_started >= 8:
                 running_shown = True
-                self._ui(self.window.show_running, config.title)
+                self._ui(self.window.hide_for_game)
             time.sleep(0.5)
 
     def _current(self, generation: int) -> bool:
@@ -127,11 +142,97 @@ class Controller:
                 return
             self._generation += 1
             self.active_device = None
+            self.active_cartridge = None
+            self.active_config = None
             process = self.process
             self.process = None
         if process:
             process.stop()
         self._ui(self.window.show_waiting)
+
+    def _show_cartridge(self) -> None:
+        with self._lock:
+            config = self.active_config
+        if config is None:
+            self._ui(self.window.show_waiting)
+        else:
+            self._ui(self.window.show_cartridge, config.title, config.cover)
+
+    def quit_game(self) -> None:
+        with self._lock:
+            self._generation += 1
+            process = self.process
+            self.process = None
+        if process is not None:
+            process.stop(timeout=2)
+        self._show_cartridge()
+
+    def open_settings(self) -> bool:
+        with self._lock:
+            in_game = self.process is not None and self.process.poll() is None
+            has_cartridge = self.active_cartridge is not None
+        self._ui(self.window.show_settings, None, in_game, has_cartridge)
+
+        def refresh() -> None:
+            status = read_status()
+            self._ui(self.window.update_settings, status)
+
+        threading.Thread(target=refresh, name="settings-status", daemon=True).start()
+        return True
+
+    def settings_action(self, action: str) -> None:
+        if action == "open":
+            self.open_settings()
+            return
+        if action == "back":
+            self._ui(self.window.close_settings)
+            return
+        if action == "quit_game":
+            threading.Thread(target=self.quit_game, name="quit-game", daemon=True).start()
+            return
+        if action == "eject":
+            threading.Thread(target=self._safe_eject, name="safe-eject", daemon=True).start()
+            return
+
+        def change_setting() -> None:
+            try:
+                message = perform(action)
+                status = read_status()
+            except (RuntimeError, ValueError) as exc:
+                self._ui(self.window.settings_message, str(exc), True)
+                return
+            self._ui(self.window.settings_message, message, False)
+            self._ui(self.window.update_settings, status)
+
+        threading.Thread(
+            target=change_setting,
+            name=f"setting-{action}",
+            daemon=True,
+        ).start()
+
+    def _safe_eject(self) -> None:
+        with self._lock:
+            cartridge = self.active_cartridge
+            if self.process is not None:
+                self._ui(
+                    self.window.settings_message,
+                    "Quit the game before ejecting its cartridge.",
+                    True,
+                )
+                return
+        if cartridge is None:
+            return
+        try:
+            eject_device(cartridge)
+        except DeviceError as exc:
+            self._ui(self.window.settings_message, str(exc), True)
+            return
+        with self._lock:
+            self._generation += 1
+            self.active_device = None
+            self.active_cartridge = None
+            self.active_config = None
+        self._ui(self.window.show_waiting, "Cartridge safely ejected")
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -149,8 +250,16 @@ def main(argv: list[str] | None = None) -> int:
             return
         assert application.window is not None
         controller = Controller(application.window, args.cartridge)
+        application.window.set_callbacks(controller.play, controller.settings_action)
         controller_holder.append(controller)
         controller.start()
+        from gi.repository import GLib
+
+        GLib.unix_signal_add(
+            GLib.PRIORITY_DEFAULT,
+            signal.SIGUSR1,
+            controller.open_settings,
+        )
 
     def shutdown(_application: CartheonApplication) -> None:
         if controller_holder:

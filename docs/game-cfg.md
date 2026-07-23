@@ -3,6 +3,12 @@
 `game.cfg` is UTF-8 TOML stored in the root of an exFAT cartridge. It is limited
 to 128 KiB. All paths use `/` separators and are relative to the cartridge root.
 
+Optional cover artwork is stored beside the manifest as `cover.<extension>`.
+Cartheon uses GTK's installed image loaders rather than restricting the filename
+to one extension. Common PNG, JPEG, WebP, GIF, BMP, TIFF, SVG, and AVIF files are
+supported when the corresponding loader is present. The first decodable
+case-insensitive `cover.*` file is used, with a maximum size of 32 MiB.
+
 ## Required fields
 
 | Field | Type | Meaning |

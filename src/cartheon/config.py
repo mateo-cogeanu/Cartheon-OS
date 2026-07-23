@@ -53,6 +53,7 @@ class GameConfig:
     executable: Path
     runtime: str
     working_directory: Path
+    cover: Path | None = None
     gamemode: bool = True
     arguments: tuple[str, ...] = ()
     environment: dict[str, str] = field(default_factory=dict)
@@ -109,6 +110,24 @@ def _ensure_inside(root: Path, path: Path, name: str) -> None:
         path.resolve(strict=False).relative_to(root.resolve(strict=True))
     except (OSError, ValueError) as exc:
         raise ConfigError(f"{name} resolves outside the cartridge") from exc
+
+
+def _find_cover(root: Path) -> Path | None:
+    candidates = sorted(
+        (
+            path
+            for path in root.iterdir()
+            if path.is_file()
+            and path.stem.casefold() == "cover"
+            and bool(path.suffix)
+        ),
+        key=lambda path: path.name.casefold(),
+    )
+    for candidate in candidates:
+        _ensure_inside(root, candidate, "cover artwork")
+        if candidate.stat().st_size <= 32 * 1024 * 1024:
+            return candidate
+    return None
 
 
 def load_config(cartridge_root: str | os.PathLike[str]) -> GameConfig:
@@ -218,6 +237,7 @@ def load_config(cartridge_root: str | os.PathLike[str]) -> GameConfig:
         executable=executable,
         runtime=runtime,
         working_directory=working_directory,
+        cover=_find_cover(root),
         gamemode=gamemode,
         arguments=tuple(arguments),
         environment=environment,

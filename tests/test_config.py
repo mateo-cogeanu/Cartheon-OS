@@ -41,6 +41,13 @@ class ConfigTests(unittest.TestCase):
         self.assertEqual(result.environment, {"TEST_MODE": "true"})
         self.assertEqual(result.boot_animation_seconds, 2.5)
 
+    def test_discovers_cover_art_next_to_manifest(self) -> None:
+        root = self.make_cartridge()
+        cover = root / "cover.PNG"
+        cover.write_bytes(b"image")
+        result = load_config(root)
+        self.assertEqual(result.cover, cover.resolve())
+
     def test_rejects_parent_traversal(self) -> None:
         config = VALID_CONFIG.replace('"Game/game.bin"', '"../game.bin"')
         with self.assertRaisesRegex(ConfigError, "inside the cartridge"):

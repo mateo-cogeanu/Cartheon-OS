@@ -100,6 +100,27 @@ def mount_device(device: dict[str, object]) -> Cartridge:
     )
 
 
+def eject_device(cartridge: Cartridge) -> None:
+    commands = (
+        ("unmount", "--no-user-interaction", "--block-device", cartridge.device),
+        ("power-off", "--no-user-interaction", "--block-device", cartridge.device),
+    )
+    for arguments in commands:
+        try:
+            result = subprocess.run(
+                ["udisksctl", *arguments],
+                check=False,
+                capture_output=True,
+                text=True,
+                timeout=30,
+            )
+        except (OSError, subprocess.SubprocessError) as exc:
+            raise DeviceError(f"could not safely eject {cartridge.device}: {exc}") from exc
+        if result.returncode != 0:
+            message = result.stderr.strip() or result.stdout.strip()
+            raise DeviceError(message or f"could not safely eject {cartridge.device}")
+
+
 class CartridgeMonitor:
     """A conservative poller; it also works when udev events were missed during boot."""
 

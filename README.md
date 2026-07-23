@@ -2,8 +2,8 @@
 
 Cartheon OS turns an x86_64 PC into a cartridge-style game console. It boots into
 one fullscreen screen, watches for an exFAT drive with `game.cfg` in its root,
-plays a cartridge animation, and launches either a native Linux game or a Windows
-game through Wine.
+shows its cover and title, and launches it only when Play is selected. Games can
+be native Linux programs or Windows programs running through Wine.
 
 This repository is a buildable **0.1 hardware-validation prototype**, not a
 finished universal console. It deliberately uses mature distribution plumbing
@@ -31,6 +31,11 @@ repository and is version-checked inside the image build.
 Format a removable drive as exFAT, place `game.cfg` in its root, and copy the game
 files named by that manifest. See [the Windows example](examples/windows-cartridge/game.cfg)
 or [the Linux example](examples/native-cartridge/game.cfg).
+
+Add cover artwork beside `game.cfg` using the name `cover.<extension>`. Cartheon
+asks GTK to decode the file, so common PNG, JPEG, WebP, GIF, BMP, TIFF, SVG, and
+AVIF images work when their image loader is installed. Artwork is limited to
+32 MiB.
 
 ```toml
 version = 1
@@ -62,6 +67,18 @@ The parser rejects absolute paths, `..`, symlinks which escape the cartridge,
 NUL bytes, oversized manifests, shell execution, and loader-injection variables
 such as `LD_PRELOAD`. A game executable is still trusted code; only insert media
 you trust.
+
+## Appliance controls
+
+- `Enter` starts the inserted cartridge from its cover screen.
+- `Escape` opens the pixel-style settings menu.
+- Arrow keys navigate settings and adjust volume; `Enter` selects an action.
+- `Ctrl`+`Alt`+`Escape` opens settings over a running game.
+- **Quit Current Game** returns to the cartridge cover.
+- **Safely Eject Cartridge** unmounts and powers down the drive before removal.
+
+The settings menu also controls mute, Bluetooth, and Wi-Fi. Controller navigation
+is planned but keyboard navigation is the current supported input.
 
 ## Build the ISO
 

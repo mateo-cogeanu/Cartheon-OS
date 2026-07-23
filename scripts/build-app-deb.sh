@@ -15,6 +15,7 @@ done
 chmod 0755 \
     "$stage_dir/DEBIAN/postinst" \
     "$stage_dir/usr/bin/cartheon-shell" \
+    "$stage_dir/usr/bin/cartheon-menu" \
     "$stage_dir/usr/bin/cartheon-validate" \
     "$stage_dir/usr/bin/cartheon-session" \
     "$stage_dir/usr/lib/cartheon/cartheon-installer" \

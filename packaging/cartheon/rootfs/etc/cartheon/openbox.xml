@@ -5,6 +5,13 @@
   <placement><policy>Smart</policy><center>yes</center><monitor>Primary</monitor></placement>
   <theme><name>Onyx</name><titleLayout></titleLayout><keepBorder>no</keepBorder></theme>
   <desktops><number>1</number></desktops>
+  <keyboard>
+    <keybind key="C-A-Escape">
+      <action name="Execute">
+        <command>/usr/bin/cartheon-menu</command>
+      </action>
+    </keybind>
+  </keyboard>
   <applications>
     <application class="*">
       <decor>no</decor>
