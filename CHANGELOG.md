@@ -5,6 +5,15 @@ in ISO 8601 format.
 
 ## Unreleased
 
+### 2026-07-23T10:50:56+02:00
+
+- Changed live USB startup to open the fullscreen network and Calamares setup
+  flow automatically, without briefly showing or depending on the cartridge
+  shell.
+- Removed every installer control and shortcut from the installed appliance
+  screen and removed its exFAT/game.cfg subtitle for a clean cartridge prompt;
+  bumped the shell to `0.1.6`.
+
 ### 2026-07-23T09:21:26+02:00
 
 - Added a graphical pre-install network assistant that detects an existing wired

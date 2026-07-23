@@ -3,9 +3,6 @@
 from __future__ import annotations
 
 import math
-import os
-from pathlib import Path
-import subprocess
 import time
 
 import gi
@@ -22,7 +19,6 @@ window { background: #070912; color: #f5f7ff; }
 .message { color: #bac1d9; font-size: 21px; }
 .detail { color: #717b9e; font-size: 14px; }
 .error { color: #ff7999; font-size: 18px; }
-.install { background: rgba(255,255,255,0.08); color: #d9deef; border-radius: 999px; padding: 9px 18px; }
 """
 
 
@@ -99,7 +95,7 @@ class ShellWindow(Gtk.ApplicationWindow):
         self.title.set_wrap(True)
         self.title.set_justify(Gtk.Justification.CENTER)
         center.append(self.title)
-        self.message = Gtk.Label(label="Waiting for an exFAT drive containing game.cfg")
+        self.message = Gtk.Label(label="")
         self.message.add_css_class("message")
         self.message.set_wrap(True)
         center.append(self.message)
@@ -107,41 +103,7 @@ class ShellWindow(Gtk.ApplicationWindow):
         self.detail.add_css_class("detail")
         center.append(self.detail)
 
-        self.install_button = Gtk.Button(label="Install Cartheon OS")
-        self.install_button.add_css_class("install")
-        self.install_button.set_halign(Gtk.Align.END)
-        self.install_button.set_valign(Gtk.Align.END)
-        self.install_button.set_margin_end(28)
-        self.install_button.set_margin_bottom(24)
-        self.install_button.connect("clicked", self._launch_installer)
-        self.install_button.set_visible(self._installer_available())
-        overlay.add_overlay(self.install_button)
-
-        keys = Gtk.EventControllerKey()
-        keys.connect("key-pressed", self._on_key)
-        self.add_controller(keys)
-
-    @staticmethod
-    def _installer_available() -> bool:
-        live = Path("/run/live/medium").exists() or Path("/lib/live/mount/medium").exists()
-        return live and Path("/usr/bin/calamares").exists()
-
-    def _on_key(self, _controller, keyval: int, _keycode: int, _state) -> bool:
-        if keyval == Gdk.KEY_F10 and self._installer_available():
-            self._launch_installer()
-            return True
-        return False
-
-    def _launch_installer(self, *_args) -> None:
-        try:
-            subprocess.Popen(
-                ["sudo", "-E", "/usr/lib/cartheon/cartheon-installer"],
-                env={**os.environ, "DISPLAY": os.environ.get("DISPLAY", ":0")},
-            )
-        except OSError as exc:
-            self.show_error(f"Could not start the installer: {exc}")
-
-    def show_waiting(self, detail: str = "Waiting for an exFAT drive containing game.cfg") -> None:
+    def show_waiting(self, detail: str = "") -> None:
         self.logo.set_active(False)
         self.title.set_label("Please insert a game cartridge")
         self.message.set_label(detail)

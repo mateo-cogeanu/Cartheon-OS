@@ -1,6 +1,17 @@
 #!/bin/sh
+set -eu
+
 xset s off
 xset -dpms
 xsetroot -solid '#070912'
+
+if [ -d /run/live/medium ] ||
+    [ -d /lib/live/mount/medium ] ||
+    grep -qw 'boot=live' /proc/cmdline; then
+    openbox --config-file /etc/cartheon/openbox-installer.xml &
+    sleep 1
+    exec sudo -E /usr/lib/cartheon/cartheon-installer
+fi
+
 openbox --config-file /etc/cartheon/openbox.xml &
 exec /usr/bin/cartheon-shell
