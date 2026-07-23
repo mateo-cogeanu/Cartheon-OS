@@ -12,6 +12,7 @@ import time
 from .config import ConfigError, GameConfig, load_config
 from .devices import Cartridge, CartridgeMonitor, DeviceError, eject_device
 from .launcher import GameProcess, LaunchError, build_launch_spec
+from .sound import play_cartridge_boot_sound
 from .system_controls import (
     BluetoothDevice,
     change_bluetooth_device,
@@ -19,6 +20,7 @@ from .system_controls import (
     disconnect_wifi,
     perform,
     read_status,
+    reconnect_paired_bluetooth_devices,
     scan_bluetooth_devices,
     scan_wifi_networks,
 )
@@ -43,6 +45,11 @@ class Controller:
         on_ui(callback, *args)
 
     def start(self) -> None:
+        threading.Thread(
+            target=reconnect_paired_bluetooth_devices,
+            name="bluetooth-auto-connect",
+            daemon=True,
+        ).start()
         if self.manual_cartridge is not None:
             cartridge = Cartridge("manual", self.manual_cartridge, "manual")
             threading.Thread(target=self._insert, args=(cartridge,), daemon=True).start()
@@ -89,6 +96,7 @@ class Controller:
             self._generation += 1
             generation = self._generation
         self._ui(self.window.show_booting, config.title)
+        play_cartridge_boot_sound()
         threading.Thread(
             target=self._launch_and_watch,
             args=(config, generation),
@@ -427,6 +435,11 @@ class Controller:
         if action == "wifi_toggle":
             self._load_wifi_menu(message=message)
         else:
+            status = read_status()
+            if status.bluetooth:
+                reconnected = reconnect_paired_bluetooth_devices()
+                if reconnected:
+                    message = f"Reconnected {', '.join(reconnected)}"
             self._load_bluetooth_menu(message)
 
     def _safe_eject(self) -> None:

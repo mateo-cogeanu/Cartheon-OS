@@ -568,7 +568,7 @@ class ShellWindow(Gtk.ApplicationWindow):
     def show_waiting(self, detail: str = "") -> None:
         self._has_cartridge = False
         self._game_running = False
-        self.waiting_rings.set_active(bool(detail))
+        self.waiting_rings.set_active(True)
         self.waiting_detail.set_label(detail.upper())
         self._show_base("waiting")
 
@@ -779,9 +779,10 @@ class ShellWindow(Gtk.ApplicationWindow):
                 marker = "[PAIRED]"
             else:
                 marker = "[NEW]"
+            signal = "--" if device.signal is None else str(device.signal)
             button = self._menu_button(
                 dynamic,
-                f"{marker} {device.name}",
+                f"{marker} {device.name}  {signal}%",
                 extra_class="network-button",
             )
             if device.connected:

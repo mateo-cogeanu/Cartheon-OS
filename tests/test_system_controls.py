@@ -7,6 +7,7 @@ from cartheon.system_controls import (
     change_bluetooth_device,
     connect_wifi,
     disconnect_wifi,
+    reconnect_paired_bluetooth_devices,
     scan_bluetooth_devices,
     scan_wifi_networks,
     split_escaped_fields,
@@ -78,14 +79,42 @@ class SystemControlTests(unittest.TestCase):
             result(
                 "Device AA:BB:CC:DD:EE:01 Pixel Pad\n"
                 "Device AA:BB:CC:DD:EE:02 Headphones\n"
+                "Device AA:BB:CC:DD:EE:03 Arcade Stick\n"
             ),
-            result("Connected: no\nPaired: no\n"),
-            result("Connected: yes\nPaired: yes\n"),
+            result("Connected: no\nPaired: no\nTrusted: no\nRSSI: -42\n"),
+            result("Connected: yes\nPaired: yes\nTrusted: yes\nRSSI: -81\n"),
+            result("Connected: no\nPaired: yes\nTrusted: yes\nRSSI: -67\n"),
         ]
         devices = scan_bluetooth_devices()
         self.assertEqual(devices[0].name, "Headphones")
         self.assertTrue(devices[0].connected)
-        self.assertFalse(devices[1].paired)
+        self.assertEqual(
+            [device.name for device in devices[1:]],
+            ["Pixel Pad", "Arcade Stick"],
+        )
+        self.assertEqual(devices[1].signal, 100)
+        self.assertTrue(devices[2].paired)
+
+    @patch("cartheon.system_controls._run")
+    def test_reconnects_previously_paired_bluetooth_devices(self, run) -> None:
+        run.side_effect = [
+            result("Powered: yes\n"),
+            result(
+                "Device AA:BB:CC:DD:EE:01 Pixel Pad\n"
+                "Device AA:BB:CC:DD:EE:02 Headphones\n"
+            ),
+            result("Connected: no\nPaired: yes\nTrusted: yes\n"),
+            result(),
+            result("Connected: yes\nPaired: yes\nTrusted: yes\n"),
+        ]
+        self.assertEqual(
+            reconnect_paired_bluetooth_devices(),
+            ["Pixel Pad"],
+        )
+        self.assertEqual(
+            run.call_args_list[3].args,
+            ("bluetoothctl", "connect", "AA:BB:CC:DD:EE:01"),
+        )
 
     @patch("cartheon.system_controls._run")
     def test_new_bluetooth_device_is_paired_trusted_and_connected(self, run) -> None:

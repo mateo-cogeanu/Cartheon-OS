@@ -39,6 +39,13 @@ class LiveAssetTests(unittest.TestCase):
         self.assertIn('set_cursor_from_name("none")', source)
         self.assertNotIn('set_cursor_from_name("default")', source)
 
+    def test_waiting_screen_rings_keep_spinning(self) -> None:
+        source = UI_MODULE.read_text()
+        waiting = source.split("def show_waiting", 1)[1].split(
+            "def show_cartridge", 1
+        )[0]
+        self.assertIn("self.waiting_rings.set_active(True)", waiting)
+
     def test_wireless_radios_open_device_menus(self) -> None:
         source = UI_MODULE.read_text()
         self.assertIn('"WI-FI SETTINGS  >"', source)

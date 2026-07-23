@@ -5,6 +5,18 @@ in ISO 8601 format.
 
 ## Unreleased
 
+### 2026-07-23T16:00:50+02:00
+
+- Made the pixel cut rings spin continuously on the empty-cartridge screen.
+- Added an original synthesized 8-bit cartridge jingle that plays
+  asynchronously through PipeWire when Play starts the boot animation.
+- Added Bluetooth RSSI collection, percentage display, and strongest-first
+  sorting after connected devices.
+- Added non-blocking automatic reconnection for available paired Bluetooth
+  devices at shell startup and after Bluetooth is powered back on; added sound,
+  sorting, reconnection, and animation regression tests and bumped the shell
+  package to `0.2.6`.
+
 ### 2026-07-23T15:48:19+02:00
 
 - Fixed Ctrl+Alt+Escape leaving fullscreen Windows games minimized or hidden

@@ -87,15 +87,20 @@ window before returning control.
 
 Every Cartheon shell screen uses the blocky Terminus pixel typeface and square,
 pixel-style controls. The pointer is hidden throughout the waiting, cartridge,
-loading, and settings screens; games receive their normal mouse pointer.
+loading, and settings screens; games receive their normal mouse pointer. The
+cut-ring cartridge graphic keeps spinning while Cartheon waits, and pressing
+Play starts an original synthesized 8-bit cartridge jingle alongside the boot
+animation.
 
 Wi-Fi and Bluetooth open keyboard-navigable submenus instead of acting as simple
 switches. Wi-Fi can be enabled or disabled, rescanned, connected with a password,
 changed to another network, or disconnected. Bluetooth can be enabled or
 disabled, rescanned, paired/trusted/connected, or disconnected. Some legacy
 Bluetooth devices can still require a PIN or confirmation that BlueZ cannot
-complete noninteractively. Controller navigation is planned; keyboard navigation
-is the current supported input.
+complete noninteractively. Nearby Bluetooth devices are ranked by measured
+signal strength, and Cartheon automatically reconnects available paired devices
+at login and after Bluetooth is turned back on. Controller navigation is
+planned; keyboard navigation is the current supported input.
 
 ## Build the ISO
 

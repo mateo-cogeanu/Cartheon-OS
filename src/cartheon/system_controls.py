@@ -35,6 +35,22 @@ class BluetoothDevice:
     name: str
     connected: bool
     paired: bool
+    trusted: bool = False
+    rssi: int | None = None
+
+    @property
+    def signal(self) -> int | None:
+        if self.rssi is None:
+            return None
+        return max(0, min(100, (self.rssi + 100) * 2))
+
+
+@dataclass(frozen=True, slots=True)
+class _BluetoothDetails:
+    connected: bool
+    paired: bool
+    trusted: bool
+    rssi: int | None
 
 
 def _run(*arguments: str, timeout: int = 10) -> subprocess.CompletedProcess[str]:
@@ -250,11 +266,23 @@ def disconnect_wifi() -> str:
     return f"Disconnected {connection}"
 
 
-def _bluetooth_info(address: str) -> tuple[bool, bool]:
+def _bluetooth_info(address: str) -> _BluetoothDetails:
     result = _run("bluetoothctl", "info", address, timeout=10)
     if result.returncode != 0:
-        return False, False
-    return "Connected: yes" in result.stdout, "Paired: yes" in result.stdout
+        return _BluetoothDetails(False, False, False, None)
+    rssi = None
+    match = re.search(r"^\s*RSSI:\s*(.+)$", result.stdout, re.MULTILINE)
+    if match:
+        text = match.group(1)
+        number = re.search(r"\((-?\d+)\)", text) or re.search(r"(-?\d+)", text)
+        if number:
+            rssi = int(number.group(1))
+    return _BluetoothDetails(
+        connected="Connected: yes" in result.stdout,
+        paired="Paired: yes" in result.stdout,
+        trusted="Trusted: yes" in result.stdout,
+        rssi=rssi,
+    )
 
 
 def scan_bluetooth_devices() -> list[BluetoothDevice]:
@@ -273,23 +301,47 @@ def scan_bluetooth_devices() -> list[BluetoothDevice]:
         parts = line.strip().split(maxsplit=2)
         if len(parts) != 3 or parts[0] != "Device":
             continue
-        connected, paired = _bluetooth_info(parts[1])
+        details = _bluetooth_info(parts[1])
         devices.append(
             BluetoothDevice(
                 address=parts[1],
                 name=parts[2],
-                connected=connected,
-                paired=paired,
+                connected=details.connected,
+                paired=details.paired,
+                trusted=details.trusted,
+                rssi=details.rssi,
             )
         )
     return sorted(
         devices,
         key=lambda device: (
             not device.connected,
-            not device.paired,
+            device.rssi is None,
+            -device.rssi if device.rssi is not None else 0,
             device.name.casefold(),
         ),
     )
+
+
+def reconnect_paired_bluetooth_devices() -> list[str]:
+    """Reconnect known devices in the background without starting discovery."""
+    if not _bluetooth_status():
+        return []
+    result = _run("bluetoothctl", "devices", "Paired", timeout=15)
+    if result.returncode != 0:
+        return []
+    connected: list[str] = []
+    for line in result.stdout.splitlines():
+        parts = line.strip().split(maxsplit=2)
+        if len(parts) != 3 or parts[0] != "Device":
+            continue
+        details = _bluetooth_info(parts[1])
+        if details.connected or not details.paired:
+            continue
+        attempt = _run("bluetoothctl", "connect", parts[1], timeout=15)
+        if attempt.returncode == 0:
+            connected.append(parts[2])
+    return connected
 
 
 def change_bluetooth_device(device: BluetoothDevice) -> str:
