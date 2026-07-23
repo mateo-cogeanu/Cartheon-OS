@@ -5,6 +5,13 @@ in ISO 8601 format.
 
 ## Unreleased
 
+### 2026-07-23T17:07:59+02:00
+
+- Increased the diagnostics result viewport after live 2560×1440 inspection so
+  all seven system/cartridge checks remain visible in the mouse-free interface
+  instead of clipping the final row behind the action buttons.
+- Bumped the shell package to `0.2.18`.
+
 ### 2026-07-23T17:04:33+02:00
 
 - Added a fullscreen, controller-navigable diagnostics screen covering the

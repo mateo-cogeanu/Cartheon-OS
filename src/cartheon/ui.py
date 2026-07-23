@@ -576,8 +576,8 @@ class ShellWindow(Gtk.ApplicationWindow):
             spacing=6,
         )
         scroll = Gtk.ScrolledWindow()
-        scroll.set_min_content_height(370)
-        scroll.set_max_content_height(370)
+        scroll.set_min_content_height(470)
+        scroll.set_max_content_height(470)
         scroll.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
         scroll.set_child(self.diagnostics_list)
         panel.append(scroll)

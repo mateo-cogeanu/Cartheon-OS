@@ -123,6 +123,7 @@ class LiveAssetTests(unittest.TestCase):
         self.assertIn('"DIAGNOSTICS  >"', ui)
         self.assertIn("show_diagnostics_loading", ui)
         self.assertIn("EXPORT REPORT TO CARTRIDGE", ui)
+        self.assertIn("scroll.set_min_content_height(470)", ui)
         self.assertIn("run_diagnostics(config)", main)
         self.assertIn("export_report(report, config.root)", main)
 
