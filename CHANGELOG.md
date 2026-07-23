@@ -5,6 +5,15 @@ in ISO 8601 format.
 
 ## Unreleased
 
+### 2026-07-23T13:39:23+02:00
+
+- Fixed the installed appliance's cartridge controller starting before its GTK
+  window exists, which left a functional-looking waiting screen while silently
+  disabling all cartridge detection.
+- Added an explicit UDisks2 mount policy for Cartheon users in the `plugdev`
+  group, added a startup-order regression check, and bumped the shell package
+  to `0.1.10`.
+
 ### 2026-07-23T13:27:58+02:00
 
 - Fixed cartridge discovery for USB SSD adapters and other exFAT drives whose

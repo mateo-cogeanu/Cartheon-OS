@@ -156,7 +156,10 @@ def main(argv: list[str] | None = None) -> int:
         if controller_holder:
             controller_holder[0].stop()
 
-    app.connect("activate", activated)
+    # Run after CartheonApplication.do_activate() has created and presented the
+    # window. A normal signal handler runs before the class handler on installed
+    # systems, leaving the waiting screen visible but never starting detection.
+    app.connect_after("activate", activated)
     app.connect("shutdown", shutdown)
     return app.run(gtk_args)
 
