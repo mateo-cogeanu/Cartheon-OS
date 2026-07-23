@@ -71,7 +71,8 @@ class LiveAssetTests(unittest.TestCase):
     def test_shell_uses_true_pixel_font_and_cartridge_core(self) -> None:
         source = UI_MODULE.read_text()
         self.assertIn('"ProggyTinyTT"', source)
-        self.assertIn("for pin in (-2.4, -0.8, 0.8, 2.4)", source)
+        self.assertIn("unit = pixel", source)
+        self.assertIn("for contact in (-1.25, 0, 1.25)", source)
 
     def test_game_window_detector_is_a_runtime_dependency(self) -> None:
         control = PACKAGE_CONTROL.read_text()

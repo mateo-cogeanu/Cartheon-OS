@@ -187,21 +187,20 @@ class PixelRings(Gtk.DrawingArea):
                 context.rectangle(x - pixel / 2, y - pixel / 2, pixel, pixel)
             context.fill()
 
-        # A shaded pixel cartridge sits at the orbit center. Its stepped
-        # shoulders, label/core, and connector pins stay aligned to the same
-        # integer pixel grid as the rings.
-        unit = pixel * 1.35
+        # Keep the orbit center quiet: a compact, mostly neutral cartridge with
+        # just enough stepped detail to read clearly at couch distance.
+        unit = pixel
 
         def cartridge_path(offset_x: float = 0, offset_y: float = 0) -> None:
             points = (
-                (-3.5, -5.5),
-                (3.5, -5.5),
-                (3.5, -4.5),
-                (4.5, -4.5),
-                (4.5, 5.5),
-                (-4.5, 5.5),
-                (-4.5, -4.5),
-                (-3.5, -4.5),
+                (-2, -5),
+                (2, -5),
+                (3, -4),
+                (3, 4),
+                (2, 5),
+                (-2, 5),
+                (-3, 4),
+                (-3, -4),
             )
             context.move_to(
                 cx + (points[0][0] + offset_x) * unit,
@@ -215,33 +214,34 @@ class PixelRings(Gtk.DrawingArea):
             context.close_path()
 
         context.set_source_rgb(0.01, 0.02, 0.06)
-        cartridge_path(0.8, 0.8)
+        cartridge_path(1, 1)
         context.fill()
-        context.set_source_rgb(0.16, 0.21, 0.43)
+        context.set_source_rgb(0.16, 0.18, 0.22)
         cartridge_path()
         context.fill()
 
-        context.set_source_rgb(0.82, 0.85, 1.0)
-        context.rectangle(cx - 3.5 * unit, cy - 4.5 * unit, 7 * unit, 9 * unit)
-        context.fill()
-        context.set_source_rgb(0.08, 0.11, 0.25)
-        context.rectangle(cx - unit, cy - 4.5 * unit, 2 * unit, unit)
-        context.rectangle(cx - 2.5 * unit, cy - 2.5 * unit, 5 * unit, 4 * unit)
-        context.rectangle(cx - 3.5 * unit, cy + 2.4 * unit, 7 * unit, 0.8 * unit)
+        context.set_source_rgb(0.33, 0.36, 0.42)
+        context.rectangle(cx - 2 * unit, cy - 4 * unit, 4 * unit, unit)
+        context.rectangle(cx - 2 * unit, cy - 3 * unit, unit, 6 * unit)
         context.fill()
 
-        context.set_source_rgb(0.25, 0.82, 0.95)
-        context.rectangle(cx - 0.55 * unit, cy - 1.8 * unit, 1.1 * unit, 2.6 * unit)
-        context.rectangle(cx - 1.3 * unit, cy - 1.05 * unit, 2.6 * unit, 1.1 * unit)
+        context.set_source_rgb(0.07, 0.08, 0.11)
+        context.rectangle(cx - unit, cy - 5 * unit, 2 * unit, unit)
+        context.rectangle(cx - 2 * unit, cy - 2 * unit, 4 * unit, 4 * unit)
+        context.rectangle(cx - 2 * unit, cy + 3 * unit, 4 * unit, unit)
         context.fill()
 
-        context.set_source_rgb(1.0, 0.79, 0.29)
-        for pin in (-2.4, -0.8, 0.8, 2.4):
+        context.set_source_rgb(0.30, 0.35, 0.43)
+        context.rectangle(cx - unit, cy - unit, 2 * unit, unit)
+        context.fill()
+
+        context.set_source_rgb(0.55, 0.52, 0.45)
+        for contact in (-1.25, 0, 1.25):
             context.rectangle(
-                cx + (pin - 0.35) * unit,
+                cx + (contact - 0.25) * unit,
                 cy + 3.25 * unit,
-                0.7 * unit,
-                1.25 * unit,
+                0.5 * unit,
+                0.75 * unit,
             )
         context.fill()
 

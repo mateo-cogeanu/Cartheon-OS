@@ -5,6 +5,13 @@ in ISO 8601 format.
 
 ## Unreleased
 
+### 2026-07-23T16:39:42+02:00
+
+- Replaced the large, colorful orbit-center emblem with a substantially smaller
+  classic pixel cartridge in restrained charcoal, slate, and contact-metal
+  tones, retaining subtle label, ridge, notch, highlight, and connector detail.
+- Bumped the shell package to `0.2.11`.
+
 ### 2026-07-23T16:32:55+02:00
 
 - Increased every ProggyTiny typography tier by roughly two-thirds after
