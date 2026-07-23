@@ -80,6 +80,9 @@ you trust.
 - **Safely Eject Cartridge** unmounts and powers down the drive before removal.
 - **Power** offers Suspend, Restart, and Shut Down. Restart and Shut Down stop
   the game and safely eject its cartridge before changing system power.
+- **Diagnostics** checks the kernel, GPU driver, Vulkan, Wine, audio,
+  controllers, and cartridge. Its timestamped support report can be exported
+  directly to the inserted cartridge.
 
 Cartheon removes its loading screen as soon as Openbox detects the game's first
 real window. For Wine cartridges it follows the complete Wine-prefix lifetime,

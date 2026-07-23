@@ -13,6 +13,7 @@ gi.require_version("Gdk", "4.0")
 gi.require_version("Gtk", "4.0")
 from gi.repository import Gdk, GLib, Gtk  # noqa: E402
 
+from .diagnostics import DiagnosticReport
 from .system_controls import BluetoothDevice, SystemStatus, WifiNetwork
 
 
@@ -138,6 +139,23 @@ scrollbar slider {
   min-height: 20px;
   border-radius: 0;
   background: #8e9cff;
+}
+.diagnostic-row {
+  min-width: 650px;
+  padding: 8px 12px;
+  border: 2px solid #2e395e;
+  background: #10162a;
+  color: #d7dcff;
+  font-size: 23px;
+}
+.diagnostic-pass {
+  border-color: #287948;
+}
+.diagnostic-warn {
+  border-color: #8f7638;
+}
+.diagnostic-fail {
+  border-color: #9b3854;
 }
 """
 
@@ -305,6 +323,7 @@ class ShellWindow(Gtk.ApplicationWindow):
         self._build_settings_page()
         self._build_power_page()
         self._build_power_confirmation_page()
+        self._build_diagnostics_page()
         self._build_wifi_page()
         self._build_wifi_password_page()
         self._build_bluetooth_page()
@@ -474,6 +493,9 @@ class ShellWindow(Gtk.ApplicationWindow):
             buttons, "BLUETOOTH SETTINGS  >", "bluetooth_open"
         )
         panel.append(self.bluetooth_button)
+        panel.append(
+            self._menu_button(buttons, "DIAGNOSTICS  >", "diagnostics_open")
+        )
         panel.append(self._menu_button(buttons, "POWER  >", "power_open"))
         self.quit_button = self._menu_button(
             buttons, "QUIT CURRENT GAME", "quit_game", extra_class="danger-button"
@@ -543,6 +565,41 @@ class ShellWindow(Gtk.ApplicationWindow):
     def _confirm_power_action(self) -> None:
         if self._pending_power_action:
             self._settings_action("power_execute", self._pending_power_action)
+
+    def _build_diagnostics_page(self) -> None:
+        outer, panel = self._panel("DIAGNOSTICS")
+        self.diagnostics_summary = Gtk.Label(label="")
+        self.diagnostics_summary.add_css_class("message")
+        panel.append(self.diagnostics_summary)
+        self.diagnostics_list = Gtk.Box(
+            orientation=Gtk.Orientation.VERTICAL,
+            spacing=6,
+        )
+        scroll = Gtk.ScrolledWindow()
+        scroll.set_min_content_height(370)
+        scroll.set_max_content_height(370)
+        scroll.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
+        scroll.set_child(self.diagnostics_list)
+        panel.append(scroll)
+        buttons: list[Gtk.Widget] = []
+        panel.append(
+            self._menu_button(buttons, "RUN AGAIN", "diagnostics_refresh")
+        )
+        self.diagnostics_export_button = self._menu_button(
+            buttons,
+            "EXPORT REPORT TO CARTRIDGE",
+            "diagnostics_export",
+        )
+        panel.append(self.diagnostics_export_button)
+        panel.append(
+            self._menu_button(buttons, "<  SETTINGS", "diagnostics_back")
+        )
+        self.diagnostics_status = self._status_label()
+        panel.append(self.diagnostics_status)
+        panel.append(self._hint())
+        self._diagnostics_fixed_buttons = buttons
+        self._menu_focusables["diagnostics"] = buttons
+        self.pages.add_named(outer, "diagnostics")
 
     def _build_wifi_page(self) -> None:
         outer, panel = self._panel("WI-FI")
@@ -673,7 +730,7 @@ class ShellWindow(Gtk.ApplicationWindow):
         if action in {"back", "menu"}:
             if page == "settings":
                 self._settings_action("back", None)
-            elif page in {"wifi", "bluetooth", "power"}:
+            elif page in {"wifi", "bluetooth", "power", "diagnostics"}:
                 self._show_menu_page("settings")
             elif page == "power_confirm":
                 self._show_menu_page("power")
@@ -820,6 +877,43 @@ class ShellWindow(Gtk.ApplicationWindow):
         self.power_status.set_label(message.upper())
         self.power_status.add_css_class("error")
         self._show_menu_page("power_confirm")
+
+    def show_diagnostics_loading(self, has_cartridge: bool) -> None:
+        self._clear_box(self.diagnostics_list)
+        self.diagnostics_summary.set_label("RUNNING SYSTEM CHECKS...")
+        self.diagnostics_export_button.set_visible(has_cartridge)
+        self.diagnostics_status.set_label("")
+        self.diagnostics_status.remove_css_class("error")
+        self._show_menu_page("diagnostics")
+
+    def show_diagnostics(
+        self,
+        report: DiagnosticReport,
+        has_cartridge: bool,
+    ) -> None:
+        self._clear_box(self.diagnostics_list)
+        self.diagnostics_summary.set_label(report.summary)
+        for check in report.checks:
+            row = Gtk.Label(
+                label=f"[{check.status}] {check.name}\n{check.detail.upper()}"
+            )
+            row.add_css_class("diagnostic-row")
+            row.add_css_class(f"diagnostic-{check.status.casefold()}")
+            row.set_xalign(0)
+            row.set_wrap(True)
+            row.set_justify(Gtk.Justification.LEFT)
+            self.diagnostics_list.append(row)
+        self.diagnostics_export_button.set_visible(has_cartridge)
+        self.diagnostics_status.set_label("")
+        self.diagnostics_status.remove_css_class("error")
+        self._show_menu_page("diagnostics")
+
+    def diagnostics_message(self, message: str, error: bool = False) -> None:
+        self.diagnostics_status.set_label(message.upper())
+        if error:
+            self.diagnostics_status.add_css_class("error")
+        else:
+            self.diagnostics_status.remove_css_class("error")
 
     @staticmethod
     def _switch_text(value: bool | None) -> str:

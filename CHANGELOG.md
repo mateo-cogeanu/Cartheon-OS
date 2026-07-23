@@ -5,6 +5,18 @@ in ISO 8601 format.
 
 ## Unreleased
 
+### 2026-07-23T17:04:33+02:00
+
+- Added a fullscreen, controller-navigable diagnostics screen covering the
+  running kernel, PCI GPU and active driver, Vulkan device/API, Wine, PipeWire,
+  connected gamepads, and the inserted cartridge's runtime/filesystem/free
+  space.
+- Added safe, timestamped plain-text support-report export to the cartridge
+  without overwriting an existing report; bundled `pciutils` and made
+  `vulkan-tools` an explicit runtime dependency.
+- Added diagnostics collection/export regression tests and bumped the shell
+  package to `0.2.17`.
+
 ### 2026-07-23T17:02:38+02:00
 
 - Added controller/keyboard-navigable Suspend, Restart, and Shut Down menus with

@@ -40,6 +40,7 @@ mesa-vdpau-drivers
 intel-media-va-driver
 libvulkan1
 vulkan-tools
+pciutils
 vainfo
 vdpauinfo
 gamemode

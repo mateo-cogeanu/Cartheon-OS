@@ -95,6 +95,8 @@ class LiveAssetTests(unittest.TestCase):
         self.assertIn("wmctrl", depends)
         self.assertIn("fonts-proggy", depends)
         self.assertIn("python3-evdev", depends)
+        self.assertIn("pciutils", depends)
+        self.assertIn("vulkan-tools", depends)
 
     def test_controller_navigation_and_menu_chord_are_wired(self) -> None:
         main = MAIN_MODULE.read_text()
@@ -114,6 +116,15 @@ class LiveAssetTests(unittest.TestCase):
         self.assertIn("cartheon-power suspend", sudoers)
         self.assertIn("eject_device(cartridge)", main)
         self.assertIn("Power action cancelled", main)
+
+    def test_diagnostics_screen_and_export_are_connected(self) -> None:
+        main = MAIN_MODULE.read_text()
+        ui = UI_MODULE.read_text()
+        self.assertIn('"DIAGNOSTICS  >"', ui)
+        self.assertIn("show_diagnostics_loading", ui)
+        self.assertIn("EXPORT REPORT TO CARTRIDGE", ui)
+        self.assertIn("run_diagnostics(config)", main)
+        self.assertIn("export_report(report, config.root)", main)
 
 
 if __name__ == "__main__":

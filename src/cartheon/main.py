@@ -10,6 +10,7 @@ import threading
 import time
 
 from .config import ConfigError, GameConfig, load_config
+from .diagnostics import DiagnosticReport, export_report, run_diagnostics
 from .devices import Cartridge, CartridgeMonitor, DeviceError, eject_device
 from .gamepad import GamepadMonitor
 from .launcher import GameProcess, LaunchError, build_launch_spec
@@ -38,6 +39,7 @@ class Controller:
         self.active_device: str | None = None
         self.active_cartridge: Cartridge | None = None
         self.active_config: GameConfig | None = None
+        self._diagnostic_report: DiagnosticReport | None = None
         self._generation = 0
         self._lock = threading.Lock()
 
@@ -97,6 +99,7 @@ class Controller:
             return
         with self._lock:
             self.active_config = config
+            self._diagnostic_report = None
         self._ui(self.window.show_cartridge, config.title, config.cover)
 
     def play(self) -> None:
@@ -199,6 +202,7 @@ class Controller:
             self.active_device = None
             self.active_cartridge = None
             self.active_config = None
+            self._diagnostic_report = None
             process = self.process
             self.process = None
         if process:
@@ -283,6 +287,23 @@ class Controller:
                 target=self._perform_power_action,
                 args=(payload,),
                 name=f"power-{payload}",
+                daemon=True,
+            ).start()
+            return
+        if action in {"diagnostics_open", "diagnostics_refresh"}:
+            threading.Thread(
+                target=self._load_diagnostics,
+                name="system-diagnostics",
+                daemon=True,
+            ).start()
+            return
+        if action == "diagnostics_back":
+            self.open_settings()
+            return
+        if action == "diagnostics_export":
+            threading.Thread(
+                target=self._export_diagnostics,
+                name="export-diagnostics",
                 daemon=True,
             ).start()
             return
@@ -406,6 +427,43 @@ class Controller:
             return
         self._ui(self.window.show_bluetooth_menu, devices, status, message, False)
 
+    def _load_diagnostics(self) -> None:
+        with self._lock:
+            config = self.active_config
+            has_cartridge = self.active_cartridge is not None
+        self._ui(self.window.show_diagnostics_loading, has_cartridge)
+        report = run_diagnostics(config)
+        with self._lock:
+            self._diagnostic_report = report
+            has_cartridge = self.active_cartridge is not None
+        self._ui(self.window.show_diagnostics, report, has_cartridge)
+
+    def _export_diagnostics(self) -> None:
+        with self._lock:
+            config = self.active_config
+            report = self._diagnostic_report
+        if config is None:
+            self._ui(
+                self.window.diagnostics_message,
+                "Insert a cartridge before exporting",
+                True,
+            )
+            return
+        if report is None:
+            report = run_diagnostics(config)
+            with self._lock:
+                self._diagnostic_report = report
+        try:
+            destination = export_report(report, config.root)
+        except OSError as exc:
+            self._ui(self.window.diagnostics_message, str(exc), True)
+            return
+        self._ui(
+            self.window.diagnostics_message,
+            f"Saved {destination.name}",
+            False,
+        )
+
     def _change_wifi_connection(self, ssid: str, password: str) -> None:
         try:
             message = connect_wifi(ssid, password)
@@ -501,6 +559,7 @@ class Controller:
             self.active_device = None
             self.active_cartridge = None
             self.active_config = None
+            self._diagnostic_report = None
         self._ui(self.window.show_waiting, "Cartridge safely ejected")
 
     def _perform_power_action(self, action: str) -> None:
