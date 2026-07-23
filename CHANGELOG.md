@@ -5,6 +5,14 @@ in ISO 8601 format.
 
 ## Unreleased
 
+### 2026-07-23T13:27:58+02:00
+
+- Fixed cartridge discovery for USB SSD adapters and other exFAT drives whose
+  partition does not repeat the parent disk's removable, hot-plug, or transport
+  flags; Cartheon now recognizes every exFAT disk or partition.
+- Added an unflagged-SSD regression test and bumped the shell package to
+  `0.1.9`.
+
 ### 2026-07-23T12:28:51+02:00
 
 - Fixed the live Wi-Fi assistant crash caused by calling the unsupported

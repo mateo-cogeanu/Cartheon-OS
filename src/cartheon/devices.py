@@ -59,11 +59,6 @@ def discover_exfat() -> list[dict[str, object]]:
         for device in devices
         if str(device.get("fstype", "")).lower() == "exfat"
         and str(device.get("type", "")) in {"part", "disk"}
-        and (
-            bool(device.get("rm"))
-            or bool(device.get("hotplug"))
-            or str(device.get("tran", "")).lower() == "usb"
-        )
     ]
 
 

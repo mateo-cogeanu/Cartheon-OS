@@ -23,10 +23,19 @@ class DeviceTests(unittest.TestCase):
         )
 
     @mock.patch("cartheon.devices._lsblk")
-    def test_only_discovers_removable_exfat(self, lsblk: mock.Mock) -> None:
+    def test_discovers_exfat_ssd_partitions_without_removable_flags(
+        self, lsblk: mock.Mock
+    ) -> None:
         lsblk.return_value = [
-            {"path": "/dev/sda1", "type": "part", "fstype": "exfat", "rm": False},
-            {"path": "/dev/sdb1", "type": "part", "fstype": "exfat", "hotplug": True},
+            {"path": "/dev/sda1", "type": "part", "fstype": "ext4", "rm": False},
+            {
+                "path": "/dev/sdb1",
+                "type": "part",
+                "fstype": "exfat",
+                "rm": False,
+                "hotplug": False,
+                "tran": None,
+            },
             {"path": "/dev/sdc1", "type": "part", "fstype": "ext4", "rm": True},
         ]
         self.assertEqual([item["path"] for item in discover_exfat()], ["/dev/sdb1"])
