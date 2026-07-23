@@ -8,6 +8,7 @@ from cartheon.system_controls import (
     connect_wifi,
     disconnect_wifi,
     reconnect_paired_bluetooth_devices,
+    request_power,
     scan_bluetooth_devices,
     scan_wifi_networks,
     split_escaped_fields,
@@ -20,6 +21,20 @@ def result(stdout: str = "", stderr: str = "", returncode: int = 0):
 
 
 class SystemControlTests(unittest.TestCase):
+    @patch("cartheon.system_controls._run")
+    def test_power_actions_use_only_the_restricted_helper(self, run) -> None:
+        run.return_value = result()
+        request_power("poweroff")
+        run.assert_called_once_with(
+            "sudo",
+            "-n",
+            "/usr/lib/cartheon/cartheon-power",
+            "poweroff",
+            timeout=30,
+        )
+        with self.assertRaises(ValueError):
+            request_power("hibernate")
+
     def test_parses_colored_bluez_scan_rssi_events(self) -> None:
         output = (
             "[\u001b[0;93mCHG\u001b[0m] Device AA:BB:CC:DD:EE:01 "

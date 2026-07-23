@@ -14,6 +14,14 @@ OPENBOX_CONFIG = (
     PROJECT_ROOT / "packaging/cartheon/rootfs/etc/cartheon/openbox.xml"
 )
 PACKAGE_CONTROL = PROJECT_ROOT / "packaging/cartheon/DEBIAN/control"
+POWER_HELPER = (
+    PROJECT_ROOT
+    / "packaging/cartheon/rootfs/usr/lib/cartheon/cartheon-power"
+)
+POWER_SUDOERS = (
+    PROJECT_ROOT
+    / "packaging/cartheon/rootfs/etc/sudoers.d/cartheon-power"
+)
 
 
 class LiveAssetTests(unittest.TestCase):
@@ -95,6 +103,17 @@ class LiveAssetTests(unittest.TestCase):
         self.assertIn("self.gamepad.start()", main)
         self.assertIn("def handle_navigation", ui)
         self.assertIn("[ HOME / ESC ] SETTINGS", ui)
+
+    def test_power_menu_uses_a_strictly_limited_helper(self) -> None:
+        helper = POWER_HELPER.read_text()
+        sudoers = POWER_SUDOERS.read_text()
+        main = MAIN_MODULE.read_text()
+        self.assertIn('if [ "$#" -ne 1 ]', helper)
+        self.assertIn("systemctl poweroff", helper)
+        self.assertNotIn("NOPASSWD: ALL", sudoers)
+        self.assertIn("cartheon-power suspend", sudoers)
+        self.assertIn("eject_device(cartridge)", main)
+        self.assertIn("Power action cancelled", main)
 
 
 if __name__ == "__main__":

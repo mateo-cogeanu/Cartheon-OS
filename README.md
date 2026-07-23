@@ -78,6 +78,8 @@ you trust.
 - `Ctrl`+`Alt`+`Escape` opens settings over a running game.
 - **Quit Current Game** returns to the cartridge cover.
 - **Safely Eject Cartridge** unmounts and powers down the drive before removal.
+- **Power** offers Suspend, Restart, and Shut Down. Restart and Shut Down stop
+  the game and safely eject its cartridge before changing system power.
 
 Cartheon removes its loading screen as soon as Openbox detects the game's first
 real window. For Wine cartridges it follows the complete Wine-prefix lifetime,

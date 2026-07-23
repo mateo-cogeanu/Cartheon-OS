@@ -22,6 +22,7 @@ from .system_controls import (
     perform,
     read_status,
     reconnect_paired_bluetooth_devices,
+    request_power,
     scan_bluetooth_devices,
     scan_wifi_networks,
 )
@@ -259,6 +260,32 @@ class Controller:
         if action == "eject":
             threading.Thread(target=self._safe_eject, name="safe-eject", daemon=True).start()
             return
+        if action == "power_open":
+            self._ui(self.window.show_power_menu)
+            return
+        if action in {"power_back", "power_cancel"}:
+            if action == "power_back":
+                self.open_settings()
+            else:
+                self._ui(self.window.show_power_menu)
+            return
+        if action == "power_request":
+            if payload not in {"suspend", "reboot", "poweroff"}:
+                self._ui(self.window.settings_message, "Invalid power action", True)
+                return
+            self._ui(self.window.show_power_confirmation, payload)
+            return
+        if action == "power_execute":
+            if payload not in {"suspend", "reboot", "poweroff"}:
+                self._ui(self.window.power_error, "Invalid power action")
+                return
+            threading.Thread(
+                target=self._perform_power_action,
+                args=(payload,),
+                name=f"power-{payload}",
+                daemon=True,
+            ).start()
+            return
         if action in {"wifi_open", "wifi_refresh"}:
             threading.Thread(
                 target=self._load_wifi_menu,
@@ -475,6 +502,45 @@ class Controller:
             self.active_cartridge = None
             self.active_config = None
         self._ui(self.window.show_waiting, "Cartridge safely ejected")
+
+    def _perform_power_action(self, action: str) -> None:
+        with self._lock:
+            process = self.process
+            cartridge = self.active_cartridge
+
+        if action == "suspend":
+            try:
+                request_power(action)
+            except (RuntimeError, ValueError) as exc:
+                self._ui(self.window.power_error, str(exc))
+                return
+            self._ui(self.window.close_settings)
+            if process is not None and process.poll() is None:
+                self._restore_game_window(process)
+            return
+
+        with self._lock:
+            self._generation += 1
+            self.process = None
+        if process is not None:
+            process.stop(timeout=2)
+        if cartridge is not None:
+            try:
+                eject_device(cartridge)
+            except DeviceError as exc:
+                self._ui(
+                    self.window.power_error,
+                    f"Power action cancelled: {exc}",
+                )
+                return
+            with self._lock:
+                self.active_device = None
+                self.active_cartridge = None
+                self.active_config = None
+        try:
+            request_power(action)
+        except (RuntimeError, ValueError) as exc:
+            self._ui(self.window.power_error, str(exc))
 
 
 def main(argv: list[str] | None = None) -> int:

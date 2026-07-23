@@ -1,0 +1,1 @@
+player ALL=(root) NOPASSWD: /usr/lib/cartheon/cartheon-power suspend, /usr/lib/cartheon/cartheon-power reboot, /usr/lib/cartheon/cartheon-power poweroff

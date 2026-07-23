@@ -286,6 +286,7 @@ class ShellWindow(Gtk.ApplicationWindow):
         self._wifi_networks: list[WifiNetwork] = []
         self._bluetooth_devices: list[BluetoothDevice] = []
         self._pending_wifi: WifiNetwork | None = None
+        self._pending_power_action = ""
         self._menu_focusables: dict[str, list[Gtk.Widget]] = {}
 
         provider = Gtk.CssProvider()
@@ -302,6 +303,8 @@ class ShellWindow(Gtk.ApplicationWindow):
         self._build_cartridge_page()
         self._build_status_page()
         self._build_settings_page()
+        self._build_power_page()
+        self._build_power_confirmation_page()
         self._build_wifi_page()
         self._build_wifi_password_page()
         self._build_bluetooth_page()
@@ -471,6 +474,7 @@ class ShellWindow(Gtk.ApplicationWindow):
             buttons, "BLUETOOTH SETTINGS  >", "bluetooth_open"
         )
         panel.append(self.bluetooth_button)
+        panel.append(self._menu_button(buttons, "POWER  >", "power_open"))
         self.quit_button = self._menu_button(
             buttons, "QUIT CURRENT GAME", "quit_game", extra_class="danger-button"
         )
@@ -488,6 +492,57 @@ class ShellWindow(Gtk.ApplicationWindow):
         panel.append(self._hint())
         self._menu_focusables["settings"] = buttons
         self.pages.add_named(outer, "settings")
+
+    def _build_power_page(self) -> None:
+        outer, panel = self._panel("POWER")
+        buttons: list[Gtk.Widget] = []
+        panel.append(
+            self._menu_button(buttons, "SUSPEND", "power_request", "suspend")
+        )
+        panel.append(
+            self._menu_button(buttons, "RESTART", "power_request", "reboot")
+        )
+        panel.append(
+            self._menu_button(
+                buttons,
+                "SHUT DOWN",
+                "power_request",
+                "poweroff",
+                extra_class="danger-button",
+            )
+        )
+        panel.append(self._menu_button(buttons, "<  SETTINGS", "power_back"))
+        panel.append(self._hint())
+        self._menu_focusables["power"] = buttons
+        self.pages.add_named(outer, "power")
+
+    def _build_power_confirmation_page(self) -> None:
+        outer, panel = self._panel("CONFIRM POWER ACTION")
+        self.power_confirmation_message = Gtk.Label(label="")
+        self.power_confirmation_message.add_css_class("message")
+        self.power_confirmation_message.set_wrap(True)
+        self.power_confirmation_message.set_justify(Gtk.Justification.CENTER)
+        panel.append(self.power_confirmation_message)
+        buttons: list[Gtk.Widget] = []
+        confirm = self._menu_button(
+            buttons,
+            "CONFIRM",
+            extra_class="danger-button",
+        )
+        confirm.connect("clicked", lambda _button: self._confirm_power_action())
+        panel.append(confirm)
+        panel.append(
+            self._menu_button(buttons, "<  CANCEL", "power_cancel")
+        )
+        self.power_status = self._status_label()
+        panel.append(self.power_status)
+        panel.append(self._hint())
+        self._menu_focusables["power_confirm"] = buttons
+        self.pages.add_named(outer, "power_confirm")
+
+    def _confirm_power_action(self) -> None:
+        if self._pending_power_action:
+            self._settings_action("power_execute", self._pending_power_action)
 
     def _build_wifi_page(self) -> None:
         outer, panel = self._panel("WI-FI")
@@ -618,8 +673,10 @@ class ShellWindow(Gtk.ApplicationWindow):
         if action in {"back", "menu"}:
             if page == "settings":
                 self._settings_action("back", None)
-            elif page in {"wifi", "bluetooth"}:
+            elif page in {"wifi", "bluetooth", "power"}:
                 self._show_menu_page("settings")
+            elif page == "power_confirm":
+                self._show_menu_page("power")
             elif page == "wifi_password":
                 self._show_menu_page("wifi")
             else:
@@ -736,6 +793,33 @@ class ShellWindow(Gtk.ApplicationWindow):
         if status is not None:
             self.update_settings(status)
         self._show_menu_page("settings")
+
+    def show_power_menu(self) -> None:
+        self._pending_power_action = ""
+        self._show_menu_page("power")
+
+    def show_power_confirmation(self, action: str) -> None:
+        labels = {
+            "suspend": ("SUSPEND", "SUSPEND CARTHEON?"),
+            "reboot": ("RESTART", "SAFELY EJECT AND RESTART CARTHEON?"),
+            "poweroff": ("SHUT DOWN", "SAFELY EJECT AND SHUT DOWN CARTHEON?"),
+        }
+        if action not in labels:
+            return
+        self._pending_power_action = action
+        button_label, message = labels[action]
+        self.power_confirmation_message.set_label(message)
+        confirm = self._menu_focusables["power_confirm"][0]
+        if isinstance(confirm, Gtk.Button):
+            confirm.set_label(f"YES, {button_label}")
+        self.power_status.set_label("")
+        self.power_status.remove_css_class("error")
+        self._show_menu_page("power_confirm")
+
+    def power_error(self, message: str) -> None:
+        self.power_status.set_label(message.upper())
+        self.power_status.add_css_class("error")
+        self._show_menu_page("power_confirm")
 
     @staticmethod
     def _switch_text(value: bool | None) -> str:

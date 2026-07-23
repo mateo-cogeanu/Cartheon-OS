@@ -5,6 +5,16 @@ in ISO 8601 format.
 
 ## Unreleased
 
+### 2026-07-23T17:02:38+02:00
+
+- Added controller/keyboard-navigable Suspend, Restart, and Shut Down menus with
+  explicit confirmation screens.
+- Restart and Shut Down now stop the active game and safely unmount and power
+  down its cartridge first; an eject failure cancels the power operation.
+- Added a root-owned power helper and a least-privilege sudo rule restricted to
+  its three exact actions, plus power routing and safety regression tests.
+- Bumped the shell package to `0.2.16`.
+
 ### 2026-07-23T17:00:47+02:00
 
 - Added non-grabbing, hot-plugged controller navigation through Linux evdev:

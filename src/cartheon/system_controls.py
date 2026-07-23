@@ -440,3 +440,21 @@ def perform(action: str) -> str:
         detail = result.stderr.strip() or result.stdout.strip()
         raise RuntimeError(detail or f"{action.replace('_', ' ')} failed")
     return message
+
+
+def request_power(action: str) -> None:
+    if action not in {"suspend", "reboot", "poweroff"}:
+        raise ValueError(f"unknown power action: {action}")
+    try:
+        result = _run(
+            "sudo",
+            "-n",
+            "/usr/lib/cartheon/cartheon-power",
+            action,
+            timeout=30,
+        )
+    except (OSError, subprocess.SubprocessError) as exc:
+        raise RuntimeError(f"{action} failed: {exc}") from exc
+    if result.returncode != 0:
+        detail = result.stderr.strip() or result.stdout.strip()
+        raise RuntimeError(detail or f"{action} failed")
