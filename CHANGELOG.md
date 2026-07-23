@@ -5,6 +5,15 @@ in ISO 8601 format.
 
 ## Unreleased
 
+### 2026-07-23T11:58:09+02:00
+
+- Prevented unsupported X11 screen-saver or DPMS operations from terminating
+  the live session before setup appears, fixing the black screen with only a
+  mouse pointer.
+- Made NetworkManager startup recoverable inside the graphical network assistant
+  and used noninteractive sudo for deterministic auto-start; bumped the shell to
+  `0.1.7`.
+
 ### 2026-07-23T10:50:56+02:00
 
 - Changed live USB startup to open the fullscreen network and Calamares setup

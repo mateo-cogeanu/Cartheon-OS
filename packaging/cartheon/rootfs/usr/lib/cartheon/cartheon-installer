@@ -8,7 +8,7 @@ if [ ! -d /run/live/medium ] &&
     exit 1
 fi
 
-systemctl start NetworkManager.service
+systemctl start NetworkManager.service || true
 /usr/lib/cartheon/cartheon-network-setup
 
 exec /usr/bin/calamares

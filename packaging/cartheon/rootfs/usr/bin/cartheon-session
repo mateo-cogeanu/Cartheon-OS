@@ -1,16 +1,18 @@
 #!/bin/sh
-set -eu
+set -u
 
-xset s off
-xset -dpms
-xsetroot -solid '#070912'
+# Some virtual and physical displays do not expose the DPMS extension. These
+# cosmetic operations must never prevent the live installer from starting.
+xset s off >/dev/null 2>&1 || true
+xset -dpms >/dev/null 2>&1 || true
+xsetroot -solid '#070912' >/dev/null 2>&1 || true
 
 if [ -d /run/live/medium ] ||
     [ -d /lib/live/mount/medium ] ||
     grep -qw 'boot=live' /proc/cmdline; then
     openbox --config-file /etc/cartheon/openbox-installer.xml &
-    sleep 1
-    exec sudo -E /usr/lib/cartheon/cartheon-installer
+    sleep 2
+    exec sudo -n -E /usr/lib/cartheon/cartheon-installer
 fi
 
 openbox --config-file /etc/cartheon/openbox.xml &
