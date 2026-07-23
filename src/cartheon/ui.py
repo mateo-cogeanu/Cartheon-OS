@@ -193,14 +193,14 @@ class PixelRings(Gtk.DrawingArea):
 
         def cartridge_path(offset_x: float = 0, offset_y: float = 0) -> None:
             points = (
-                (-2, -5),
-                (2, -5),
-                (3, -4),
-                (3, 4),
-                (2, 5),
-                (-2, 5),
-                (-3, 4),
-                (-3, -4),
+                (-4, -4),
+                (4, -4),
+                (5, -3),
+                (5, 3),
+                (4, 4),
+                (-4, 4),
+                (-5, 3),
+                (-5, -3),
             )
             context.move_to(
                 cx + (points[0][0] + offset_x) * unit,
@@ -221,22 +221,22 @@ class PixelRings(Gtk.DrawingArea):
         context.fill()
 
         context.set_source_rgb(0.33, 0.36, 0.42)
-        context.rectangle(cx - 2 * unit, cy - 4 * unit, 4 * unit, unit)
-        context.rectangle(cx - 2 * unit, cy - 3 * unit, unit, 6 * unit)
+        context.rectangle(cx - 4 * unit, cy - 3 * unit, 8 * unit, unit)
+        context.rectangle(cx - 4 * unit, cy - 2 * unit, unit, 4 * unit)
         context.fill()
 
         context.set_source_rgb(0.07, 0.08, 0.11)
-        context.rectangle(cx - unit, cy - 5 * unit, 2 * unit, unit)
-        context.rectangle(cx - 2 * unit, cy - 2 * unit, 4 * unit, 4 * unit)
-        context.rectangle(cx - 2 * unit, cy + 3 * unit, 4 * unit, unit)
+        context.rectangle(cx - 3 * unit, cy - 2 * unit, 6 * unit, 4 * unit)
+        context.rectangle(cx - 4 * unit, cy + 2 * unit, 8 * unit, unit)
         context.fill()
 
         context.set_source_rgb(0.30, 0.35, 0.43)
-        context.rectangle(cx - unit, cy - unit, 2 * unit, unit)
+        context.rectangle(cx - 2 * unit, cy - unit, 4 * unit, unit)
+        context.rectangle(cx - unit / 2, cy + unit, unit, unit)
         context.fill()
 
         context.set_source_rgb(0.55, 0.52, 0.45)
-        for contact in (-1.25, 0, 1.25):
+        for contact in (-2.4, -0.8, 0.8, 2.4):
             context.rectangle(
                 cx + (contact - 0.25) * unit,
                 cy + 3.25 * unit,

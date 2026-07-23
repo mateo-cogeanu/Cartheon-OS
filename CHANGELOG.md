@@ -5,6 +5,13 @@ in ISO 8601 format.
 
 ## Unreleased
 
+### 2026-07-23T16:49:03+02:00
+
+- Reworked the compact center icon from a phone-like vertical shape into a
+  clearly cartridge-like wide body with clipped shoulders, a broad recessed
+  label, bottom ridge, four contacts, and a subtle label detail.
+- Bumped the shell package to `0.2.12`.
+
 ### 2026-07-23T16:39:42+02:00
 
 - Replaced the large, colorful orbit-center emblem with a substantially smaller
