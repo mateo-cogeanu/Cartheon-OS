@@ -81,6 +81,9 @@ Cartheon removes its loading screen as soon as Openbox detects the game's first
 real window. For Wine cartridges it follows the complete Wine-prefix lifetime,
 so launchers may hand off to another executable without Cartheon covering the
 still-running game. **Quit Current Game** terminates that whole cartridge prefix.
+If a fullscreen game minimizes when the settings overlay takes focus, closing
+the overlay explicitly unminimizes, raises, and focuses the game's topmost
+window before returning control.
 
 Every Cartheon shell screen uses the blocky Terminus pixel typeface and square,
 pixel-style controls. The pointer is hidden throughout the waiting, cartridge,

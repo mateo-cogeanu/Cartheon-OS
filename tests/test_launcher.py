@@ -95,6 +95,29 @@ class LauncherTests(unittest.TestCase):
         game = GameProcess(process, spec, {"0x200001"})
         self.assertTrue(game.has_window())
 
+    @mock.patch("cartheon.launcher.subprocess.run")
+    def test_restores_the_topmost_game_window_after_settings(
+        self, run: mock.Mock
+    ) -> None:
+        run.return_value = subprocess.CompletedProcess([], 0, "", "")
+        process = mock.Mock()
+        spec = LaunchSpec(("game",), Path("/tmp"), {})
+        game = GameProcess(process, spec, {"0x200001"})
+        game._game_windows = {"0x40000a", "0x50000b"}
+        with mock.patch.object(
+            game,
+            "_window_ids",
+            return_value=["0x200001", "0x40000a", "0x50000b"],
+        ):
+            self.assertTrue(game.restore_window())
+        self.assertEqual(
+            [call.args[0] for call in run.call_args_list],
+            [
+                ("wmctrl", "-i", "-r", "0x50000b", "-b", "remove,hidden"),
+                ("wmctrl", "-i", "-a", "0x50000b"),
+            ],
+        )
+
     @mock.patch("cartheon.launcher.subprocess.Popen")
     def test_wine_launcher_exit_waits_for_the_complete_prefix(
         self, popen: mock.Mock

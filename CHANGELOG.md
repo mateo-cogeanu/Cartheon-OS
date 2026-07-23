@@ -5,6 +5,14 @@ in ISO 8601 format.
 
 ## Unreleased
 
+### 2026-07-23T15:48:19+02:00
+
+- Fixed Ctrl+Alt+Escape leaving fullscreen Windows games minimized or hidden
+  after closing settings: Cartheon now remembers the game's EWMH windows and
+  explicitly unminimizes, raises, and focuses the topmost surviving game window.
+- Added `wmctrl` as an explicit runtime/live-image dependency, added window
+  restoration regression coverage, and bumped the shell package to `0.2.5`.
+
 ### 2026-07-23T15:36:50+02:00
 
 - Added Debian's `x11-utils` package as an explicit shell and live-image

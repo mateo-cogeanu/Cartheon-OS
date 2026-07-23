@@ -88,30 +88,31 @@ class GameProcess:
         self.env = spec.env
         self.baseline_windows = baseline_windows
         self._wine_waiter: subprocess.Popen[bytes] | None = None
+        self._game_windows: set[str] = set()
 
     @staticmethod
-    def _window_ids() -> set[str]:
-        """Return EWMH client windows without depending on a desktop toolkit."""
+    def _window_ids() -> list[str]:
+        """Return EWMH client windows in bottom-to-top stacking order."""
         try:
             result = subprocess.run(
-                ("xprop", "-root", "_NET_CLIENT_LIST"),
+                ("xprop", "-root", "_NET_CLIENT_LIST_STACKING"),
                 check=False,
                 capture_output=True,
                 text=True,
                 timeout=2,
             )
         except (OSError, subprocess.SubprocessError):
-            return set()
+            return []
         if result.returncode != 0:
-            return set()
-        return {
+            return []
+        return [
             window.lower()
             for window in re.findall(r"0x[0-9a-fA-F]+", result.stdout)
-        }
+        ]
 
     @classmethod
     def start(cls, spec: LaunchSpec) -> "GameProcess":
-        baseline_windows = cls._window_ids()
+        baseline_windows = set(cls._window_ids())
         try:
             process = subprocess.Popen(
                 spec.argv,
@@ -128,7 +129,42 @@ class GameProcess:
 
     def has_window(self) -> bool:
         """Report when the game has created a new window managed by Openbox."""
-        return bool(self._window_ids() - self.baseline_windows)
+        windows = set(self._window_ids()) - self.baseline_windows
+        self._game_windows.update(windows)
+        return bool(windows)
+
+    def restore_window(self) -> bool:
+        """Unminimize, raise, and focus the game's topmost surviving window."""
+        current = self._window_ids()
+        candidates = [window for window in current if window in self._game_windows]
+        if not candidates:
+            # Refresh once in case the menu opened before the watcher recorded
+            # the game's first EWMH window.
+            candidates = [
+                window for window in current if window not in self.baseline_windows
+            ]
+            self._game_windows.update(candidates)
+        if not candidates:
+            return False
+        window = candidates[-1]
+        commands = (
+            ("wmctrl", "-i", "-r", window, "-b", "remove,hidden"),
+            ("wmctrl", "-i", "-a", window),
+        )
+        for command in commands:
+            try:
+                result = subprocess.run(
+                    command,
+                    check=False,
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL,
+                    timeout=3,
+                )
+            except (OSError, subprocess.SubprocessError):
+                return False
+            if result.returncode != 0:
+                return False
+        return True
 
     def poll(self) -> int | None:
         exit_code = self.process.poll()

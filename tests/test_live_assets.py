@@ -53,6 +53,7 @@ class LiveAssetTests(unittest.TestCase):
             if line.startswith("Depends: ")
         )
         self.assertIn("x11-utils", depends)
+        self.assertIn("wmctrl", depends)
 
 
 if __name__ == "__main__":

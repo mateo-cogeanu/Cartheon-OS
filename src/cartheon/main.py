@@ -222,6 +222,15 @@ class Controller:
             return
         if action == "back":
             self._ui(self.window.close_settings)
+            with self._lock:
+                process = self.process
+            if process is not None and process.poll() is None:
+                threading.Thread(
+                    target=self._restore_game_window,
+                    args=(process,),
+                    name="restore-game-window",
+                    daemon=True,
+                ).start()
             return
         if action == "submenu_back":
             self.open_settings()
@@ -304,6 +313,13 @@ class Controller:
             name=f"setting-{action}",
             daemon=True,
         ).start()
+
+    @staticmethod
+    def _restore_game_window(process: GameProcess) -> None:
+        # Let GTK withdraw its fullscreen menu before asking Openbox to restore
+        # and activate a game that minimized itself on focus loss.
+        time.sleep(0.15)
+        process.restore_window()
 
     def _load_wifi_menu(self, force_rescan: bool = False, message: str = "") -> None:
         status = read_status()
