@@ -193,14 +193,14 @@ class PixelRings(Gtk.DrawingArea):
 
         def ssd_path(offset_x: float = 0, offset_y: float = 0) -> None:
             points = (
-                (-5, -4),
-                (5, -4),
-                (6, -3),
-                (6, 3),
-                (5, 4),
-                (-5, 4),
-                (-6, 3),
-                (-6, -3),
+                (-3, -6),
+                (3, -6),
+                (4, -5),
+                (4, 5),
+                (3, 6),
+                (-3, 6),
+                (-4, 5),
+                (-4, -5),
             )
             context.move_to(
                 cx + (points[0][0] + offset_x) * unit,
@@ -221,17 +221,17 @@ class PixelRings(Gtk.DrawingArea):
         context.fill()
 
         context.set_source_rgb(0.33, 0.36, 0.42)
-        context.rectangle(cx - 5 * unit, cy - 3 * unit, 10 * unit, unit)
-        context.rectangle(cx - 5 * unit, cy - 2 * unit, unit, 4 * unit)
+        context.rectangle(cx - 3 * unit, cy - 5 * unit, 6 * unit, unit)
+        context.rectangle(cx - 3 * unit, cy - 4 * unit, unit, 8 * unit)
         context.fill()
 
         context.set_source_rgb(0.07, 0.08, 0.11)
-        context.rectangle(cx - 2 * unit, cy - 3 * unit, 4 * unit, 6 * unit)
+        context.rectangle(cx - 2 * unit, cy - 4 * unit, 4 * unit, 8 * unit)
         context.fill()
 
         context.set_source_rgb(0.42, 0.45, 0.49)
         screw_size = max(2, unit / 2)
-        for screw_x, screw_y in ((-4.5, -2.5), (4, -2.5), (-4.5, 2), (4, 2)):
+        for screw_x, screw_y in ((-2.5, -4.5), (2, -4.5), (-2.5, 3), (2, 3)):
             context.rectangle(
                 cx + screw_x * unit,
                 cy + screw_y * unit,
@@ -240,7 +240,7 @@ class PixelRings(Gtk.DrawingArea):
             )
         context.fill()
 
-        # The label says SSD vertically in a hand-built 3x5 pixel alphabet.
+        # Three upright glyphs are stacked from top to bottom: S, S, D.
         ssd_glyphs = (
             ("111", "100", "111", "001", "111"),
             ("111", "100", "111", "001", "111"),
@@ -248,25 +248,23 @@ class PixelRings(Gtk.DrawingArea):
         )
         glyph_pixel = max(2, pixel // 2)
         context.set_source_rgb(0.47, 0.54, 0.62)
-        glyph_x = 0
-        for glyph in ssd_glyphs:
+        for glyph_index, glyph in enumerate(ssd_glyphs):
             for glyph_y, row in enumerate(glyph):
                 for column, enabled in enumerate(row):
                     if enabled == "1":
-                        normal_x = glyph_x + column
+                        stack_row = glyph_index * 6 + glyph_y
                         context.rectangle(
-                            cx + (2 - glyph_y) * glyph_pixel,
-                            cy + (normal_x - 5) * glyph_pixel,
+                            cx + (column - 1.5) * glyph_pixel,
+                            cy + (stack_row - 8.5) * glyph_pixel,
                             glyph_pixel,
                             glyph_pixel,
                         )
-            glyph_x += 4
         context.fill()
 
-        # Two differently sized blocks suggest the SSD's SATA connector edge.
+        # Two differently sized bottom blocks form the SSD's SATA connector.
         context.set_source_rgb(0.04, 0.05, 0.07)
-        context.rectangle(cx + 4 * unit, cy - 2 * unit, 2 * unit, 1.5 * unit)
-        context.rectangle(cx + 3 * unit, cy + unit / 2, 3 * unit, 1.5 * unit)
+        context.rectangle(cx - 3 * unit, cy + 4.5 * unit, 3 * unit, 1.5 * unit)
+        context.rectangle(cx + unit / 2, cy + 4.5 * unit, 2.5 * unit, 1.5 * unit)
         context.fill()
 
 

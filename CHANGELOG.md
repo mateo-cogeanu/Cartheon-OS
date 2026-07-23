@@ -5,6 +5,13 @@ in ISO 8601 format.
 
 ## Unreleased
 
+### 2026-07-23T16:53:57+02:00
+
+- Rotated the center SSD into portrait orientation and changed its label to
+  three individually upright pixel letters stacked exactly `S`, `S`, `D` from
+  top to bottom; moved the two-part SATA connector to the bottom edge.
+- Bumped the shell package to `0.2.14`.
+
 ### 2026-07-23T16:51:24+02:00
 
 - Replaced the orbit-center cartridge with a restrained 2.5-inch SSD silhouette

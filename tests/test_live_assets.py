@@ -73,7 +73,8 @@ class LiveAssetTests(unittest.TestCase):
         self.assertIn('"ProggyTinyTT"', source)
         self.assertIn("def ssd_path", source)
         self.assertIn("ssd_glyphs", source)
-        self.assertIn("SSD's SATA connector edge", source)
+        self.assertIn("stacked from top to bottom: S, S, D", source)
+        self.assertIn("SSD's SATA connector", source)
 
     def test_game_window_detector_is_a_runtime_dependency(self) -> None:
         control = PACKAGE_CONTROL.read_text()
