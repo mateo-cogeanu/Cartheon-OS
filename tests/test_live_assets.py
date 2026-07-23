@@ -86,6 +86,15 @@ class LiveAssetTests(unittest.TestCase):
         self.assertIn("x11-utils", depends)
         self.assertIn("wmctrl", depends)
         self.assertIn("fonts-proggy", depends)
+        self.assertIn("python3-evdev", depends)
+
+    def test_controller_navigation_and_menu_chord_are_wired(self) -> None:
+        main = MAIN_MODULE.read_text()
+        ui = UI_MODULE.read_text()
+        self.assertIn("GamepadMonitor(self.gamepad_action)", main)
+        self.assertIn("self.gamepad.start()", main)
+        self.assertIn("def handle_navigation", ui)
+        self.assertIn("[ HOME / ESC ] SETTINGS", ui)
 
 
 if __name__ == "__main__":

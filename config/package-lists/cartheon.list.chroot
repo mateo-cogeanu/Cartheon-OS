@@ -82,6 +82,7 @@ libspa-0.2-bluetooth
 alsa-utils
 bluez
 joystick
+python3-evdev
 steam-devices
 usb-modeswitch
 

@@ -381,7 +381,7 @@ class ShellWindow(Gtk.ApplicationWindow):
         self.play_button.set_halign(Gtk.Align.CENTER)
         self.play_button.connect("clicked", lambda _button: self._play())
         page.append(self.play_button)
-        hint = Gtk.Label(label="[ ENTER ] PLAY    [ ESC ] SETTINGS")
+        hint = Gtk.Label(label="[ A / ENTER ] PLAY    [ HOME / ESC ] SETTINGS")
         hint.add_css_class("detail")
         page.append(hint)
         self.pages.add_named(page, "cartridge")
@@ -450,7 +450,9 @@ class ShellWindow(Gtk.ApplicationWindow):
 
     @staticmethod
     def _hint() -> Gtk.Label:
-        hint = Gtk.Label(label="[ UP / DOWN ] SELECT    [ ENTER ] CHOOSE    [ ESC ] BACK")
+        hint = Gtk.Label(
+            label="[ D-PAD ] SELECT    [ A / ENTER ] CHOOSE    [ B / ESC ] BACK"
+        )
         hint.add_css_class("detail")
         return hint
 
@@ -597,8 +599,23 @@ class ShellWindow(Gtk.ApplicationWindow):
         state: Gdk.ModifierType,
     ) -> bool:
         del state
+        actions = {
+            Gdk.KEY_Escape: "back",
+            Gdk.KEY_Return: "accept",
+            Gdk.KEY_KP_Enter: "accept",
+            Gdk.KEY_Up: "up",
+            Gdk.KEY_Down: "down",
+            Gdk.KEY_Left: "left",
+            Gdk.KEY_Right: "right",
+        }
+        action = actions.get(keyval)
+        return self.handle_navigation(action) if action is not None else False
+
+    def handle_navigation(self, action: str) -> bool:
+        if not self.get_visible() and action != "menu":
+            return False
         page = self.pages.get_visible_child_name() or ""
-        if keyval == Gdk.KEY_Escape:
+        if action in {"back", "menu"}:
             if page == "settings":
                 self._settings_action("back", None)
             elif page in {"wifi", "bluetooth"}:
@@ -608,27 +625,32 @@ class ShellWindow(Gtk.ApplicationWindow):
             else:
                 self._settings_action("open", None)
             return True
-        if page == "cartridge" and keyval in (Gdk.KEY_Return, Gdk.KEY_KP_Enter):
+        if page == "cartridge" and action == "accept":
             self._play()
             return True
         focusables = self._visible_focusables(page)
         if not focusables:
             return False
-        if keyval in (Gdk.KEY_Up, Gdk.KEY_Down):
+        if action in {"up", "down"}:
             focus = self.get_focus()
             try:
                 index = focusables.index(focus)
             except ValueError:
                 index = 0
             else:
-                index += -1 if keyval == Gdk.KEY_Up else 1
+                index += -1 if action == "up" else 1
             focusables[index % len(focusables)].grab_focus()
             return True
+        if action == "accept":
+            focus = self.get_focus()
+            if isinstance(focus, Gtk.Button):
+                focus.activate()
+                return True
         if page == "settings" and self.get_focus() is self.volume_button:
-            if keyval == Gdk.KEY_Left:
+            if action == "left":
                 self._settings_action("volume_down", None)
                 return True
-            if keyval == Gdk.KEY_Right:
+            if action == "right":
                 self._settings_action("volume_up", None)
                 return True
         return False

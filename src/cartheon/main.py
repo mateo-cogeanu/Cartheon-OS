@@ -11,6 +11,7 @@ import time
 
 from .config import ConfigError, GameConfig, load_config
 from .devices import Cartridge, CartridgeMonitor, DeviceError, eject_device
+from .gamepad import GamepadMonitor
 from .launcher import GameProcess, LaunchError, build_launch_spec
 from .sound import play_cartridge_boot_sound
 from .system_controls import (
@@ -31,6 +32,7 @@ class Controller:
         self.window = window
         self.manual_cartridge = manual_cartridge
         self.monitor: CartridgeMonitor | None = None
+        self.gamepad = GamepadMonitor(self.gamepad_action)
         self.process: GameProcess | None = None
         self.active_device: str | None = None
         self.active_cartridge: Cartridge | None = None
@@ -45,6 +47,7 @@ class Controller:
         on_ui(callback, *args)
 
     def start(self) -> None:
+        self.gamepad.start()
         threading.Thread(
             target=reconnect_paired_bluetooth_devices,
             name="bluetooth-auto-connect",
@@ -58,6 +61,7 @@ class Controller:
         self.monitor.start()
 
     def stop(self) -> None:
+        self.gamepad.stop()
         if self.monitor:
             self.monitor.stop()
         with self._lock:
@@ -66,6 +70,12 @@ class Controller:
             self.process = None
         if process:
             process.stop()
+
+    def gamepad_action(self, action: str) -> None:
+        if action == "menu":
+            self.open_settings()
+            return
+        self._ui(self.window.handle_navigation, action)
 
     def _device_error(self, message: str) -> None:
         # Discovery errors should be visible but should not kill the monitor.

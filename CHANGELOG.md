@@ -5,6 +5,15 @@ in ISO 8601 format.
 
 ## Unreleased
 
+### 2026-07-23T17:00:47+02:00
+
+- Added non-grabbing, hot-plugged controller navigation through Linux evdev:
+  D-pad/left stick navigate, South/A selects, East/B returns, and Home/Guide or
+  Start+Select opens Cartheon settings even while a game is running.
+- Unified keyboard and controller focus handling, updated on-screen control
+  hints, added mapper/chord/axis regression tests, and bundled `python3-evdev`.
+- Bumped the shell package to `0.2.15`.
+
 ### 2026-07-23T16:53:57+02:00
 
 - Rotated the center SSD into portrait orientation and changed its label to

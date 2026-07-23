@@ -73,6 +73,8 @@ you trust.
 - `Enter` starts the inserted cartridge from its cover screen.
 - `Escape` opens the pixel-style settings menu.
 - Arrow keys navigate settings and adjust volume; `Enter` selects an action.
+- A controller D-pad or left stick navigates, South/A selects, and East/B goes
+  back. Home/Guide or Start+Select opens settings, including over a game.
 - `Ctrl`+`Alt`+`Escape` opens settings over a running game.
 - **Quit Current Game** returns to the cartridge cover.
 - **Safely Eject Cartridge** unmounts and powers down the drive before removal.
@@ -88,9 +90,9 @@ window before returning control.
 Every Cartheon shell screen uses the grid-designed ProggyTiny pixel typeface and
 square, pixel-style controls. The pointer is hidden throughout the waiting,
 cartridge, loading, and settings screens; games receive their normal mouse
-pointer. The cut rings orbit a shaded pixel cartridge with a glowing label/core
-and connector pins while Cartheon waits. Pressing Play starts an original
-synthesized 8-bit cartridge jingle alongside the boot animation.
+pointer. The cut rings orbit a compact portrait SSD with a stacked pixel `SSD`
+label while Cartheon waits. Pressing Play starts an original synthesized 8-bit
+cartridge jingle alongside the boot animation.
 
 Whenever Cartheon remaps itself after a game or settings overlay, it reasserts
 fullscreen immediately and again on GTK's next frame. A game cannot leave the
@@ -104,8 +106,8 @@ disabled, rescanned, paired/trusted/connected, or disconnected. Some legacy
 Bluetooth devices can still require a PIN or confirmation that BlueZ cannot
 complete noninteractively. Nearby Bluetooth devices are ranked by measured
 signal strength, and Cartheon automatically reconnects available paired devices
-at login and after Bluetooth is turned back on. Controller navigation is
-planned; keyboard navigation is the current supported input.
+at login and after Bluetooth is turned back on. Controllers are hot-plugged
+through Linux evdev without being grabbed, so games continue receiving input.
 
 ## Build the ISO
 
