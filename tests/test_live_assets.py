@@ -68,11 +68,12 @@ class LiveAssetTests(unittest.TestCase):
         self.assertIn("GLib.idle_add(self.fullscreen)", show_base)
         self.assertIn("self.fullscreen()", close_settings)
 
-    def test_shell_uses_true_pixel_font_and_cartridge_core(self) -> None:
+    def test_shell_uses_true_pixel_font_and_ssd_centerpiece(self) -> None:
         source = UI_MODULE.read_text()
         self.assertIn('"ProggyTinyTT"', source)
-        self.assertIn("unit = pixel", source)
-        self.assertIn("for contact in (-2.4, -0.8, 0.8, 2.4)", source)
+        self.assertIn("def ssd_path", source)
+        self.assertIn("ssd_glyphs", source)
+        self.assertIn("SSD's SATA connector edge", source)
 
     def test_game_window_detector_is_a_runtime_dependency(self) -> None:
         control = PACKAGE_CONTROL.read_text()

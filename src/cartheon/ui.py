@@ -187,20 +187,20 @@ class PixelRings(Gtk.DrawingArea):
                 context.rectangle(x - pixel / 2, y - pixel / 2, pixel, pixel)
             context.fill()
 
-        # Keep the orbit center quiet: a compact, mostly neutral cartridge with
-        # just enough stepped detail to read clearly at couch distance.
+        # A compact 2.5-inch SSD silhouette makes the removable-storage idea
+        # explicit without overpowering the orbit animation.
         unit = pixel
 
-        def cartridge_path(offset_x: float = 0, offset_y: float = 0) -> None:
+        def ssd_path(offset_x: float = 0, offset_y: float = 0) -> None:
             points = (
-                (-4, -4),
-                (4, -4),
-                (5, -3),
-                (5, 3),
-                (4, 4),
-                (-4, 4),
-                (-5, 3),
-                (-5, -3),
+                (-5, -4),
+                (5, -4),
+                (6, -3),
+                (6, 3),
+                (5, 4),
+                (-5, 4),
+                (-6, 3),
+                (-6, -3),
             )
             context.move_to(
                 cx + (points[0][0] + offset_x) * unit,
@@ -214,35 +214,59 @@ class PixelRings(Gtk.DrawingArea):
             context.close_path()
 
         context.set_source_rgb(0.01, 0.02, 0.06)
-        cartridge_path(1, 1)
+        ssd_path(1, 1)
         context.fill()
-        context.set_source_rgb(0.16, 0.18, 0.22)
-        cartridge_path()
+        context.set_source_rgb(0.14, 0.16, 0.19)
+        ssd_path()
         context.fill()
 
         context.set_source_rgb(0.33, 0.36, 0.42)
-        context.rectangle(cx - 4 * unit, cy - 3 * unit, 8 * unit, unit)
-        context.rectangle(cx - 4 * unit, cy - 2 * unit, unit, 4 * unit)
+        context.rectangle(cx - 5 * unit, cy - 3 * unit, 10 * unit, unit)
+        context.rectangle(cx - 5 * unit, cy - 2 * unit, unit, 4 * unit)
         context.fill()
 
         context.set_source_rgb(0.07, 0.08, 0.11)
-        context.rectangle(cx - 3 * unit, cy - 2 * unit, 6 * unit, 4 * unit)
-        context.rectangle(cx - 4 * unit, cy + 2 * unit, 8 * unit, unit)
+        context.rectangle(cx - 2 * unit, cy - 3 * unit, 4 * unit, 6 * unit)
         context.fill()
 
-        context.set_source_rgb(0.30, 0.35, 0.43)
-        context.rectangle(cx - 2 * unit, cy - unit, 4 * unit, unit)
-        context.rectangle(cx - unit / 2, cy + unit, unit, unit)
-        context.fill()
-
-        context.set_source_rgb(0.55, 0.52, 0.45)
-        for contact in (-2.4, -0.8, 0.8, 2.4):
+        context.set_source_rgb(0.42, 0.45, 0.49)
+        screw_size = max(2, unit / 2)
+        for screw_x, screw_y in ((-4.5, -2.5), (4, -2.5), (-4.5, 2), (4, 2)):
             context.rectangle(
-                cx + (contact - 0.25) * unit,
-                cy + 3.25 * unit,
-                0.5 * unit,
-                0.75 * unit,
+                cx + screw_x * unit,
+                cy + screw_y * unit,
+                screw_size,
+                screw_size,
             )
+        context.fill()
+
+        # The label says SSD vertically in a hand-built 3x5 pixel alphabet.
+        ssd_glyphs = (
+            ("111", "100", "111", "001", "111"),
+            ("111", "100", "111", "001", "111"),
+            ("110", "101", "101", "101", "110"),
+        )
+        glyph_pixel = max(2, pixel // 2)
+        context.set_source_rgb(0.47, 0.54, 0.62)
+        glyph_x = 0
+        for glyph in ssd_glyphs:
+            for glyph_y, row in enumerate(glyph):
+                for column, enabled in enumerate(row):
+                    if enabled == "1":
+                        normal_x = glyph_x + column
+                        context.rectangle(
+                            cx + (2 - glyph_y) * glyph_pixel,
+                            cy + (normal_x - 5) * glyph_pixel,
+                            glyph_pixel,
+                            glyph_pixel,
+                        )
+            glyph_x += 4
+        context.fill()
+
+        # Two differently sized blocks suggest the SSD's SATA connector edge.
+        context.set_source_rgb(0.04, 0.05, 0.07)
+        context.rectangle(cx + 4 * unit, cy - 2 * unit, 2 * unit, 1.5 * unit)
+        context.rectangle(cx + 3 * unit, cy + unit / 2, 3 * unit, 1.5 * unit)
         context.fill()
 
 

@@ -5,6 +5,13 @@ in ISO 8601 format.
 
 ## Unreleased
 
+### 2026-07-23T16:51:24+02:00
+
+- Replaced the orbit-center cartridge with a restrained 2.5-inch SSD silhouette
+  featuring clipped corners, four mounting points, a two-part SATA connector
+  edge, and a hand-drawn pixel `SSD` label running sideways across its face.
+- Bumped the shell package to `0.2.13`.
+
 ### 2026-07-23T16:49:03+02:00
 
 - Reworked the compact center icon from a phone-like vertical shape into a
