@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from pathlib import Path
 import hashlib
 import os
+import re
 import shutil
 import signal
 import subprocess
@@ -22,6 +23,7 @@ class LaunchSpec:
     argv: tuple[str, ...]
     cwd: Path
     env: dict[str, str]
+    wine_server: str | None = None
 
 
 def _cartridge_id(config: GameConfig) -> str:
@@ -33,6 +35,7 @@ def build_launch_spec(config: GameConfig, data_home: Path | None = None) -> Laun
     env = os.environ.copy()
     env.update(config.environment)
     executable = str(config.executable_path)
+    wine_server: str | None = None
 
     if config.runtime == "native":
         argv = (executable, *config.arguments)
@@ -40,6 +43,9 @@ def build_launch_spec(config: GameConfig, data_home: Path | None = None) -> Laun
         wine = shutil.which("wine")
         if wine is None:
             raise LaunchError("Wine is not installed")
+        wine_server = shutil.which("wineserver")
+        if wine_server is None:
+            raise LaunchError("Wine server is not installed")
         if data_home is None:
             data_home = Path(os.environ.get("XDG_DATA_HOME", Path.home() / ".local/share"))
         if config.wine.prefix == "cartridge":
@@ -62,15 +68,50 @@ def build_launch_spec(config: GameConfig, data_home: Path | None = None) -> Laun
     if gamemoderun is not None:
         argv = (gamemoderun, *argv)
 
-    return LaunchSpec(argv=tuple(argv), cwd=config.working_directory_path, env=env)
+    return LaunchSpec(
+        argv=tuple(argv),
+        cwd=config.working_directory_path,
+        env=env,
+        wine_server=wine_server,
+    )
 
 
 class GameProcess:
-    def __init__(self, process: subprocess.Popen[bytes]) -> None:
+    def __init__(
+        self,
+        process: subprocess.Popen[bytes],
+        spec: LaunchSpec,
+        baseline_windows: set[str],
+    ) -> None:
         self.process = process
+        self.wine_server = spec.wine_server
+        self.env = spec.env
+        self.baseline_windows = baseline_windows
+        self._wine_waiter: subprocess.Popen[bytes] | None = None
+
+    @staticmethod
+    def _window_ids() -> set[str]:
+        """Return EWMH client windows without depending on a desktop toolkit."""
+        try:
+            result = subprocess.run(
+                ("xprop", "-root", "_NET_CLIENT_LIST"),
+                check=False,
+                capture_output=True,
+                text=True,
+                timeout=2,
+            )
+        except (OSError, subprocess.SubprocessError):
+            return set()
+        if result.returncode != 0:
+            return set()
+        return {
+            window.lower()
+            for window in re.findall(r"0x[0-9a-fA-F]+", result.stdout)
+        }
 
     @classmethod
     def start(cls, spec: LaunchSpec) -> "GameProcess":
+        baseline_windows = cls._window_ids()
         try:
             process = subprocess.Popen(
                 spec.argv,
@@ -83,19 +124,62 @@ class GameProcess:
             )
         except OSError as exc:
             raise LaunchError(f"could not start the game: {exc}") from exc
-        return cls(process)
+        return cls(process, spec, baseline_windows)
+
+    def has_window(self) -> bool:
+        """Report when the game has created a new window managed by Openbox."""
+        return bool(self._window_ids() - self.baseline_windows)
 
     def poll(self) -> int | None:
-        return self.process.poll()
+        exit_code = self.process.poll()
+        if exit_code is None or self.wine_server is None:
+            return exit_code
+
+        # Launchers commonly hand the real game to another Wine process and
+        # exit. The Wine server represents the lifetime of the complete prefix,
+        # so do not put Cartheon back over a still-running child.
+        if self._wine_waiter is None:
+            try:
+                self._wine_waiter = subprocess.Popen(
+                    (self.wine_server, "-w"),
+                    env=self.env,
+                    stdin=subprocess.DEVNULL,
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL,
+                )
+            except OSError:
+                return exit_code
+        if self._wine_waiter.poll() is None:
+            return None
+        return exit_code
 
     def stop(self, timeout: float = 8.0) -> None:
         if self.poll() is not None:
             return
+        if self.wine_server is not None:
+            try:
+                subprocess.run(
+                    (self.wine_server, "-k"),
+                    env=self.env,
+                    stdin=subprocess.DEVNULL,
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL,
+                    check=False,
+                    timeout=min(timeout, 5),
+                )
+            except (OSError, subprocess.SubprocessError):
+                pass
         try:
-            os.killpg(self.process.pid, signal.SIGTERM)
-            self.process.wait(timeout=timeout)
+            if self.process.poll() is None:
+                os.killpg(self.process.pid, signal.SIGTERM)
+                self.process.wait(timeout=timeout)
         except subprocess.TimeoutExpired:
             os.killpg(self.process.pid, signal.SIGKILL)
             self.process.wait(timeout=2)
         except ProcessLookupError:
             pass
+        if self._wine_waiter is not None:
+            try:
+                self._wine_waiter.wait(timeout=2)
+            except subprocess.TimeoutExpired:
+                self._wine_waiter.terminate()

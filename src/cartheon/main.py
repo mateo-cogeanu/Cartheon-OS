@@ -110,22 +110,43 @@ class Controller:
                 return
             self.process = process
 
-        remaining = config.boot_animation_seconds - (time.monotonic() - started)
-        if remaining > 0:
-            time.sleep(remaining)
+        # Keep the pixel boot animation only until the game has a real window.
+        # As soon as Openbox manages that window, remove Cartheon instead of
+        # presenting a loading page over a game that is already playable.
+        boot_deadline = started + config.boot_animation_seconds
+        shell_hidden = False
+        while self._current(generation) and time.monotonic() < boot_deadline:
+            exit_code = process.poll()
+            if exit_code is not None:
+                with self._lock:
+                    if self.process is process:
+                        self.process = None
+                self._ui(
+                    self.window.show_error,
+                    f"The game exited during startup (code {exit_code})",
+                )
+                return
+            if process.has_window():
+                shell_hidden = True
+                self._ui(self.window.hide_for_game)
+                break
+            time.sleep(0.1)
         if not self._current(generation):
             return
-        exit_code = process.poll()
-        if exit_code is not None:
-            with self._lock:
-                if self.process is process:
-                    self.process = None
-            self._ui(self.window.show_error, f"The game exited during startup (code {exit_code})")
-            return
-        self._ui(self.window.show_loading, config.title)
+        if not shell_hidden:
+            exit_code = process.poll()
+            if exit_code is not None:
+                with self._lock:
+                    if self.process is process:
+                        self.process = None
+                self._ui(
+                    self.window.show_error,
+                    f"The game exited during startup (code {exit_code})",
+                )
+                return
+            self._ui(self.window.show_loading, config.title)
 
         loading_started = time.monotonic()
-        running_shown = False
         while self._current(generation):
             exit_code = process.poll()
             if exit_code is not None:
@@ -137,8 +158,13 @@ class Controller:
                 else:
                     self._ui(self.window.show_error, f"The game exited with code {exit_code}")
                 return
-            if not running_shown and time.monotonic() - loading_started >= 8:
-                running_shown = True
+            if not shell_hidden and process.has_window():
+                shell_hidden = True
+                self._ui(self.window.hide_for_game)
+            elif not shell_hidden and time.monotonic() - loading_started >= 20:
+                # Some override-redirect fullscreen games never register an
+                # EWMH client window. Avoid covering them forever.
+                shell_hidden = True
                 self._ui(self.window.hide_for_game)
             time.sleep(0.5)
 

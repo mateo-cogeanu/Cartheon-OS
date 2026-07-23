@@ -77,6 +77,11 @@ you trust.
 - **Quit Current Game** returns to the cartridge cover.
 - **Safely Eject Cartridge** unmounts and powers down the drive before removal.
 
+Cartheon removes its loading screen as soon as Openbox detects the game's first
+real window. For Wine cartridges it follows the complete Wine-prefix lifetime,
+so launchers may hand off to another executable without Cartheon covering the
+still-running game. **Quit Current Game** terminates that whole cartridge prefix.
+
 Every Cartheon shell screen uses the blocky Terminus pixel typeface and square,
 pixel-style controls. The pointer is hidden throughout the waiting, cartridge,
 loading, and settings screens; games receive their normal mouse pointer.
