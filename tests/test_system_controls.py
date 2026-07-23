@@ -87,13 +87,18 @@ class SystemControlTests(unittest.TestCase):
             ("nmcli", "connection", "down", "id", "Arcade"),
         )
 
+    @patch("cartheon.system_controls.time.sleep")
+    @patch("cartheon.system_controls.subprocess.Popen")
     @patch("cartheon.system_controls._run")
-    def test_bluetooth_scan_marks_paired_and_connected_devices(self, run) -> None:
+    def test_bluetooth_scan_marks_paired_and_connected_devices(
+        self, run, popen, _sleep
+    ) -> None:
+        popen.return_value.communicate.return_value = (
+            "[CHG] Device AA:BB:CC:DD:EE:01 RSSI: 0xffffffd8 (-40)\n"
+            "[CHG] Device AA:BB:CC:DD:EE:03 RSSI: 0xffffffb5 (-75)\n",
+            "",
+        )
         run.side_effect = [
-            result(
-                "[CHG] Device AA:BB:CC:DD:EE:01 RSSI: 0xffffffd8 (-40)\n"
-                "[CHG] Device AA:BB:CC:DD:EE:03 RSSI: 0xffffffb5 (-75)\n"
-            ),
             result(
                 "Device AA:BB:CC:DD:EE:01 Pixel Pad\n"
                 "Device AA:BB:CC:DD:EE:02 Headphones\n"

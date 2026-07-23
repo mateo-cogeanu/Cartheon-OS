@@ -5,6 +5,16 @@ in ISO 8601 format.
 
 ## Unreleased
 
+### 2026-07-23T16:09:38+02:00
+
+- Kept the BlueZ discovery client alive while reading device properties so RSSI
+  remains available even when no new strength-change event is emitted during a
+  scan.
+- Activated the waiting rings when their page is first constructed, fixing
+  static rings on a fresh login before the first cartridge cycle.
+- Added startup-animation and active-discovery regression coverage and bumped
+  the shell package to `0.2.8`.
+
 ### 2026-07-23T16:04:31+02:00
 
 - Fixed Bluetooth strength readings on BlueZ adapters that expose RSSI only in

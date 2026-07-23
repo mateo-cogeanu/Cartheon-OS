@@ -5,6 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 import re
 import subprocess
+import time
 
 
 @dataclass(frozen=True, slots=True)
@@ -298,23 +299,45 @@ def _scan_rssi(output: str) -> dict[str, int]:
 
 
 def scan_bluetooth_devices() -> list[BluetoothDevice]:
-    # The bounded scan updates BlueZ's device cache and exits automatically.
+    # Keep the discovery client alive while reading Device1 properties. BlueZ
+    # removes RSSI as soon as discovery ends on some adapters.
+    scan_process: subprocess.Popen[str] | None = None
     try:
-        scan = _run("bluetoothctl", "--timeout", "6", "scan", "on", timeout=10)
-    except subprocess.TimeoutExpired:
-        scan = subprocess.CompletedProcess([], 124, "", "")
-    scan_readings = _scan_rssi(scan.stdout)
+        scan_process = subprocess.Popen(
+            ("bluetoothctl", "--timeout", "6", "scan", "on"),
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+        )
+        time.sleep(2)
+    except OSError:
+        scan_process = None
     result = _run("bluetoothctl", "devices", timeout=15)
     if result.returncode != 0:
+        if scan_process is not None:
+            scan_process.terminate()
         detail = result.stderr.strip() or result.stdout.strip()
         raise RuntimeError(detail or "Bluetooth could not list nearby devices")
 
-    devices: list[BluetoothDevice] = []
+    discovered: list[tuple[list[str], _BluetoothDetails]] = []
     for line in result.stdout.splitlines():
         parts = line.strip().split(maxsplit=2)
         if len(parts) != 3 or parts[0] != "Device":
             continue
         details = _bluetooth_info(parts[1])
+        discovered.append((parts, details))
+
+    scan_output = ""
+    if scan_process is not None:
+        try:
+            scan_output, _stderr = scan_process.communicate(timeout=8)
+        except subprocess.TimeoutExpired:
+            scan_process.terminate()
+            scan_output, _stderr = scan_process.communicate(timeout=2)
+    scan_readings = _scan_rssi(scan_output)
+
+    devices: list[BluetoothDevice] = []
+    for parts, details in discovered:
         devices.append(
             BluetoothDevice(
                 address=parts[1],

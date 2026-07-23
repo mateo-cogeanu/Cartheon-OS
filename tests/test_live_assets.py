@@ -45,6 +45,10 @@ class LiveAssetTests(unittest.TestCase):
             "def show_cartridge", 1
         )[0]
         self.assertIn("self.waiting_rings.set_active(True)", waiting)
+        self.assertGreaterEqual(
+            source.count("self.waiting_rings.set_active(True)"),
+            2,
+        )
 
     def test_wireless_radios_open_device_menus(self) -> None:
         source = UI_MODULE.read_text()

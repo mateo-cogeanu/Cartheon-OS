@@ -262,6 +262,7 @@ class ShellWindow(Gtk.ApplicationWindow):
     def _build_waiting_page(self) -> None:
         page = self._centered_page(18)
         self.waiting_rings = PixelRings(210)
+        self.waiting_rings.set_active(True)
         self.waiting_rings.set_halign(Gtk.Align.CENTER)
         page.append(self.waiting_rings)
         title = Gtk.Label(label="PLEASE INSERT A GAME CARTRIDGE")
