@@ -29,10 +29,18 @@ class SystemControlTests(unittest.TestCase):
         run.return_value = result(
             "no:Arcade:45:WPA2\nyes:Arcade:28:WPA2\nno:Guest:72:--\n"
         )
-        networks = scan_wifi_networks()
+        networks = scan_wifi_networks(force_rescan=True)
+        self.assertEqual(run.call_args.kwargs["timeout"], 45)
+        self.assertEqual(run.call_args.args[-1], "yes")
         self.assertEqual([network.ssid for network in networks], ["Arcade", "Guest"])
         self.assertTrue(networks[0].connected)
         self.assertFalse(networks[1].secured)
+
+    @patch("cartheon.system_controls._run")
+    def test_wifi_menu_open_uses_cached_scan_results(self, run) -> None:
+        run.return_value = result()
+        scan_wifi_networks()
+        self.assertEqual(run.call_args.args[-1], "no")
 
     @patch("cartheon.system_controls._run")
     def test_wifi_connect_passes_password_without_a_shell(self, run) -> None:

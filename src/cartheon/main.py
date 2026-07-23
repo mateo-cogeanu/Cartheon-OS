@@ -209,6 +209,7 @@ class Controller:
         if action in {"wifi_open", "wifi_refresh"}:
             threading.Thread(
                 target=self._load_wifi_menu,
+                args=(action == "wifi_refresh",),
                 name="wifi-scan",
                 daemon=True,
             ).start()
@@ -278,14 +279,14 @@ class Controller:
             daemon=True,
         ).start()
 
-    def _load_wifi_menu(self, message: str = "") -> None:
+    def _load_wifi_menu(self, force_rescan: bool = False, message: str = "") -> None:
         status = read_status()
         self._ui(self.window.show_wifi_loading, status)
         if not status.wifi:
             self._ui(self.window.show_wifi_menu, [], status, message, False)
             return
         try:
-            networks = scan_wifi_networks()
+            networks = scan_wifi_networks(force_rescan=force_rescan)
             status = read_status()
         except (OSError, RuntimeError, subprocess.SubprocessError) as exc:
             self._ui(
@@ -330,7 +331,7 @@ class Controller:
                 True,
             )
             return
-        self._load_wifi_menu(message)
+        self._load_wifi_menu(message=message)
 
     def _disconnect_wifi(self) -> None:
         try:
@@ -344,7 +345,7 @@ class Controller:
                 True,
             )
             return
-        self._load_wifi_menu(message)
+        self._load_wifi_menu(message=message)
 
     def _change_bluetooth_device(self, device: BluetoothDevice) -> None:
         try:
@@ -382,7 +383,7 @@ class Controller:
                 )
             return
         if action == "wifi_toggle":
-            self._load_wifi_menu(message)
+            self._load_wifi_menu(message=message)
         else:
             self._load_bluetooth_menu(message)
 

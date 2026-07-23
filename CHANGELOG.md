@@ -5,6 +5,15 @@ in ISO 8601 format.
 
 ## Unreleased
 
+### 2026-07-23T15:04:50+02:00
+
+- Made opening Wi-Fi settings use NetworkManager's cached background results so
+  adapters that interrupt their active association during a forced scan do not
+  drop the shell's current connection; a fresh radio scan now occurs only when
+  the user explicitly chooses **Scan for Networks**.
+- Added cached-versus-forced scan regression coverage and bumped the shell
+  package to `0.2.2`.
+
 ### 2026-07-23T14:52:41+02:00
 
 - Extended the 8-bit visual language across every Cartheon shell screen with

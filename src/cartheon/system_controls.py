@@ -155,7 +155,7 @@ def read_status() -> SystemStatus:
     )
 
 
-def scan_wifi_networks() -> list[WifiNetwork]:
+def scan_wifi_networks(force_rescan: bool = False) -> list[WifiNetwork]:
     result = _run(
         "nmcli",
         "--terse",
@@ -167,7 +167,7 @@ def scan_wifi_networks() -> list[WifiNetwork]:
         "wifi",
         "list",
         "--rescan",
-        "yes",
+        "yes" if force_rescan else "no",
         timeout=45,
     )
     if result.returncode != 0:
