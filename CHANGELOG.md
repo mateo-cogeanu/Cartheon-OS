@@ -5,6 +5,13 @@ in ISO 8601 format.
 
 ## Unreleased
 
+### 2026-07-23T15:36:50+02:00
+
+- Added Debian's `x11-utils` package as an explicit shell and live-image
+  dependency so the new `xprop` game-window detector is always available after
+  upgrades and clean installations.
+- Added dependency regression coverage and bumped the shell package to `0.2.4`.
+
 ### 2026-07-23T15:21:10+02:00
 
 - Fixed playable Windows game windows being covered again by Cartheon's loading

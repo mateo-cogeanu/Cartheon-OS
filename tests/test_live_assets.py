@@ -13,6 +13,7 @@ UI_MODULE = PROJECT_ROOT / "src/cartheon/ui.py"
 OPENBOX_CONFIG = (
     PROJECT_ROOT / "packaging/cartheon/rootfs/etc/cartheon/openbox.xml"
 )
+PACKAGE_CONTROL = PROJECT_ROOT / "packaging/cartheon/DEBIAN/control"
 
 
 class LiveAssetTests(unittest.TestCase):
@@ -43,6 +44,15 @@ class LiveAssetTests(unittest.TestCase):
         self.assertIn('"WI-FI SETTINGS  >"', source)
         self.assertIn('"BLUETOOTH SETTINGS  >"', source)
         self.assertIn('"wifi_password"', source)
+
+    def test_game_window_detector_is_a_runtime_dependency(self) -> None:
+        control = PACKAGE_CONTROL.read_text()
+        depends = next(
+            line.removeprefix("Depends: ").split(", ")
+            for line in control.splitlines()
+            if line.startswith("Depends: ")
+        )
+        self.assertIn("x11-utils", depends)
 
 
 if __name__ == "__main__":
